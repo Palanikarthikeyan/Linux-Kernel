@@ -1,0 +1,667 @@
+OS - System Software(program) - interface between user & H/W
+
+	+========================+
+	|User: Application       |
+	|			 |
+	+------------------------+
+	|OS(Kernel)		 |
+	|			 |
+	+------------------------+
+	|			 |
+	|H/W: CPU RAM HD I/O NIC |
+	+------------------------+
+
+ Kernel - Core part of an os
+ ------
+  |-->File,Process 
+
+  |->File = Data under the storage device
+  |			   ---------------
+  |->Process = Data under the CPU
+			      ---
+ -----------------------------------------------------------------------
+ Unix 
+ 
+ GNUProject
+
+ Linux - GNU/Linux
+
+ RedHatLinux Ubuntu OracleLinux 
+
+ ---------------
+ 1945... Telcomm/Embedded - OS 
+
+	  osA - asm	   osB(asm)	... 
+	  ---		   ---		---
+	  |		   |			
+	  X10(processor)   X11		...
+
+ 1950 - AT&T osX 
+
+	Vision: portable os
+
+ 1969 - unix 
+	
+	 BCPL ->B -->B+ ==>C  -- unix - 1971/72
+	..............
+
+ minix -edu
+ 
+ 1983 - GNUProject
+	---
+	|->bash gdb gcc gzip ...
+ 	|->grub etc.,
+
+ 1991 - Linus ->unix =>Kernel(Linux)
+	|----------------------|---------->GNU/Linux - 1991 
+	
+
+ OS=Kernel + Utilities(tools)	
+    ......  ..................
+	|
+	|
+  RedHat - Linux + tools =>RedHatLinux OS
+  Debian - Linux + tools =>Ubuntu , Linux minit ..
+  Oracle - Linux + tools =>OracleLinux (UBEK)
+	   -----   =====
+ 
+ RedHatLinux -> install webserver => yum install httpd	
+ Ubuntu	     -> install webserver => apt install apache2
+			
+	
+ Kernel - File,Process
+ ------
+
+ Userlevel
+ ------------------------------------------
+		systemcall()=FD  (FileDescriptor-int)
+		FD=0<STDIN> - keyboard
+		FD=1 STDOUT - monitor 
+		FD=2 STDERR - monitor
+		
+		FD=3 to 2 pow 32/64 - Valid systemcall
+		FD=0x1345 (memory) - valid systemcall
+		
+		FD=-1 <== FailedCall
+
+
+
+	+========================+
+	|User: Application       |
+	|			 |
+	+----------//shell-------+
+	|OS(Kernel)		 |
+	|			 |
+	+------------------------+
+	|			 |
+	|H/W: CPU RAM HD I/O NIC |
+	+------------------------+
+
+	
+	User:
+	-----------//shell----------------------------------
+		systemcall
+		|
+		FileSystem <---->PCB |IPC;SCHED;Net;Memory|
+		|
+		Device Drivers
+		|
+		Device Ctrlers(asm)
+		|
+	-----------------------------------------------------
+	H/W:
+---------------------------------------------------------------------------------
+ Shell
+ -----
+  |-> interface between user & kernel
+      
+	+========================+
+	|User: Application       |
+	|			 |
+	+----------//shell-------+
+	|OS(Kernel)		 |
+	|			 |
+	+------------------------+
+	|			 |
+	|H/W: CPU RAM HD I/O NIC |
+	+------------------------+
+
+ |-> POST ->MBR ->GRUB(linux boot loader) ->Kernel ->Process(system process)
+		   |					|
+		  GRUB2					systemD(PID:1)
+							|...//runlevel process
+							|...//automatically
+							|
+						getty(or)tty - ? - Login 
+							|	   |
+						   shell(CLI) Vs Desktop(GUI)
+							|	   |
+						   User I/O      User I/O
+						   - user process -
+						     -------------
+							 |->TTY:pts/<port>
+ 	TTY
+	 ? ----------- systemprocess
+	 pts/<port>-----userprocess
+ 
+ Login as: student		Login as: karthik
+ password: 			password:
+			
+ student@host~]$		karthik@host~]$ 
+ ---------------		---------------
+   |->primary prompt	<---------|
+
+ Login as:root
+ password:
+
+ root@host~]# 
+ ---------------
+	|->primary prompt
+----------------------------------------------------------------------------
+  Types of shell
+ ----------------
+ 1.BourneShell (sh) 
+ 2.KornShell   (ksh)
+ |
+ 3.CShell (csh) ->tcsh ->expect
+ |
+ 4.BourneAgainSHell(BASH) - GNU - default shell in Linux 
+		    ----
+ 
+ sh,ksh,bash		Vs		csh
+ 				
+ variable=value			set variable value
+ 
+
+  #!/bin/bash <---
+	 ....
+	 ....
+	 ....
+
+ How to test current working shell?
+
+ ps <== command
+	(or)
+ echo $0 <=== special variable 
+      -- 
+
+ How to test list of available shells?
+
+ cat /etc/shells 
+     ------------
+----------------------------------------------------------------------------------
+ shellscript
+  |
+ system program
+  |
+ Linux Internals - Filesystem,Process .. Kernel data structure
+  |
+ Linux Device Drivers
+-------------------------------------------------------------------
+About shell script 
+--------------------
+ |->script file is an ordinary file (or) TEXT File
+ |
+ |->filename.sh 	filename
+	    ----	---------//valid
+
+ |->executable file
+    ----------------
+
+ File(F) - 3 mode(operation)  - by 3users(user/login/author) - u
+	   -----------------		 (group  )	     - g
+	   read(r)  write(w)		 (others )	     - o
+	   execute(x) 
+
+ chmod userdetails + mode  inputfile(s)   - symbolic style 
+		   -  
+ 
+  + ==> To assign a permission
+  - ==> To remove an existing permission
+
+ To assign execute permission to user
+ 
+ chmod u+x filename.sh
+       --- =============
+		|->Absolute path   /home/userA/project/filename.sh
+				      
+		|->Relative path   ./filename.sh  				
+
+		 / <== like mycomputer
+		 |
+    -----------------------------
+    |	|	|	|  ..	 |
+		/
+		|
+		--------------
+		|	|  ..|
+				     
+ 
+
+	/root - root user login path	
+
+	/home/ - non-root user login path 
+
+ userA	userB userC
+
+ 		/
+		|
+ -----------------------------------
+ |				   |
+ |				  root/ <== root user login path
+ home/
+  |-------userA/ ...
+  |-------userB/ ...
+  |-------userC/ ...
+ 
+
+ chmod userdetails + mode  inputfile(s)   - symbolic style 
+		   -  
+			(or)
+ chmod 777 inputfile(s) - octal style
+
+ r	w	x
+ 1	1	1 	-> 7
+ 1	1	0	-> 6
+ 1	0	1	-> 5
+ 1	0	0	-> 4
+ 0	0	0	-> 0
+ 
+ chmod 765 p1.sh
+       |||
+       ||r-x
+       |rw-
+      rwx
+------------------------------------------------------------------------------------------
+Go to login path  - cd {enter}
+
+Test your working directory - pwd {Enter}
+--------------------------------------------------------------------------------------------
+Script
+--------
+    variable
+    operators
+    conditional & loop
+    filehandling
+    function 
+    +
+    filters + Regx
+    ------------------//automate command line tasks
+				 ------------------
+ shell script - file is an ordinary file
+	      - file is executable
+	      
+ shell is dynamic type
+	  -------------
+ shell command structure
+ 
+ 1. command only style -> root@host~]# command 
+				 
+  ls ps pwd hostname whoami date uname ...
+
+
+ 2. command with argument style -> root@host~]# command -option arg1 arg2
+
+ ls -l
+ ls -l /etc/passwd p1.c p3.c
+ cat filename.c
+ echo Linux kernel 
+ echo "Linux Kernel" 
+ ..
+
+ 3. command with command style ->root@host~]# command `command` (or) command $(command)
+	   
+ echo "My working kernel name is:`uname`"
+ My working kernel name is:Linux
+
+------------------------------------------------------------------------------
+ /bin/		- internal command(files)
+ /usr/bin/	- installed binary files(command)
+ /sbin/		- root user only can able to access under /sbin/ 
+ -------------
+ 
+ variable
+ ---------
+   |-> namespace (or) place holder - which is holding value
+ 
+ Syntax:-
+ ---------
+ userdefinedVariable=Value
+ ===================|-------
+    |		    	|->everything (digits,command, etc.)
+ starts with A-Za-z_
+ |
+ not allows space (or) specialchars
+ |
+ not starts with digits 
+ |
+ There is no space in = LHS & RHS 
+
+ myfile="p1.c" # initialization
+ size="2KB"    # initialization
+ 
+ echo myfile ->myfile
+ |
+ echo $myfile ->p1.c
+      -
+	(or)
+
+ echo ${myfile} ->p1.c 
+
+ echo $Myfile ->empty 
+       ------
+	 |->Un-defined variable 
+
+ myfile="p1.c"
+ fsize="2kb"
+ 
+ echo "My file name:$myfile  size:$fsize"
+		    -------	  ------
+
+ Keyboard(<STDIN>)------<--read------Shellscript---->--echo ------Monitor(STDOUT)
+			
+ Syntax:-
+ --------
+ read UDV
+ 	
+ read myfile 
+
+
+
+ echo "Enter a filename:"
+ read myfile
+ ls -l $myfile 
+
+
+ read -p "user defined message"<space>UDV
+ -----   |--------------------|         
+
+ read -p "Enter a filename:" myfile 
+ ls -l $myfile
+ 
+ Write a shell script
+
+ read a kernel module name from <STDIN>
+ read a kernel module size from <STDIN>
+ |
+ read a no.of process used by given module from <STDIN> 
+ |
+ - display - input module details 
+   (using echo command)
+ ----------------------------------------------------------------------
+ O/P
+ ----
+ Enter a kernel module name:nfs
+ Enter nfs size:150KB	    ---
+ Enter no.of process used by nfs module:5 
+
+ Loaded kernel module is:nfs it's size is:150KB  
+ Total no.of process: 5
+ ----------------------------------------------------------//
+  	
+ vi filename {Enter}
+
+ # command mode - save,insert,copy,paste ...
+
+ # press 'i'
+          |__ insert mode (or) input mode
+
+ # ....
+ #......
+ # press ESC  ->:wq (save and exit)	
+ 
+ # press ESC ->:q! <== forced to quit
+ 
+ cat filaname {Enter}
+-----------------------------------------------------------------------------
+
+ 1. User defined variable 
+ 2. Shell variable (or) env (or) built variables (or) exported variables
+
+   env {Enter}
+	
+   - all the shell variables are global access
+				 -------------
+  export UDV=value
+
+	(or)
+
+  UDV=value
+  export UDV
+  -----------------------
+
+  using shell variable - display login shell name
+			 display list of files from login directory
+			 display current working directory 
+
+ -----------------------------------------------------------------------
+ in shell commandline -> defined UDV ->export it -> using env 
+					         ->get exported variable.
+ --------------------------------------------------------------------------
+
+  root@host~]# ./p1.sh {Enter}
+  Enter an IPAddress:     
+  		     ^^^^^^^^^^^
+		    execution input
+			(or)
+		    interactive input
+  # p1.sh is running state (R+)
+   
+  ping -c 3 $IP
+  
+
+  
+  root@host~]# ./p1.sh <IP-Address> {Enter}
+			^^^^^^^^^^
+			    |->Runtime input(or) non-interactive (or) commandline input
+			 					
+
+  commandline argument variable
+
+  ${n}
+    |---nth argument 
+
+ root@host~]# ./p1.sh <arg1> <arg2> <arg3> <arg4>  ... <argN>
+		      ------ ======
+			$1	$2
+
+ $1  (or) ${1} 
+ $2  (or) ${2}
+ $3  (or) ${3}
+ ..
+ $9  (or) ${9}
+ ${10}
+ ${11}
+ ...
+ ${n}
+ --------------------
+ 
+  - positional parameters
+
+   $1 ->1st 
+   $2 ->2nd 
+
+ To get list of all the args from commandline ->  $@ (or) $*
+ 
+ To get total no.of args -> $#
+ 	   
+ --------------------------------------------------------------------
+ ping -c <$1>  <$2> 
+ 
+ -----------------
+ ping -c $1 $2
+ ----------------
+ ./p1.sh 2 127.0.0.1 {Enter}
+
+ -------------------------------------------------------------------
+ Recap
+ -------
+ 1. UDV  => variableName=value
+	    ------------
+ 2. export variable=Value  -> env 	
+	   ---------------
+ 3. Commandline args -> $1 $2.. ${n}  Vs  read -p 'promptmessage' UDV
+ --------------------------------------------------------------------------
+ operators
+ ----------
+  ->1. Arithmetic  
+  |
+  ->2. Relational 
+  |
+  ->3. Logical
+  |
+  ->4. FileTest
+
+ 1. Arithmetic 
+ ---------------
+ echo 10 + 20 ->10 + 20
+ 	 -
+ va=10
+ vb=20
+ echo $va + $vb ->10 + 20
+
+ I) expr command	II)  compound style $((expression))
+    ----		 		    ----------------
+
+ expr
+ -----
+ expr<space>Operand1<space>OPERATOR<space>Operand2
+ 
+ expr 10 + 20 ->30
+ expr 10 - 4  ->6
+
+ expr 10 * 3 ->Error
+	 |
+	wildcard char
+
+ In shell command line - disable the specialchar use \ symbol
+
+ 
+
+[root@ip-172-31-2-19 Day1]# echo "Hello"
+Hello
+[root@ip-172-31-2-19 Day1]# echo \"Hello\"
+"Hello"
+[root@ip-172-31-2-19 Day1]# myvar=120
+[root@ip-172-31-2-19 Day1]# # $myvar value is:120
+[root@ip-172-31-2-19 Day1]# # ------
+[root@ip-172-31-2-19 Day1]#
+[root@ip-172-31-2-19 Day1]# echo "$myvar value is:$myvar"
+120 value is:120
+[root@ip-172-31-2-19 Day1]# echo "\$myvar value is:$myvar"
+$myvar value is:120
+[root@ip-172-31-2-19 Day1]# expr 10 + 20
+30
+[root@ip-172-31-2-19 Day1]# expr 10 - 20
+-10
+[root@ip-172-31-2-19 Day1]# expr 10 * 20
+expr: syntax error
+[root@ip-172-31-2-19 Day1]# expr 10 * 20
+expr: syntax error
+[root@ip-172-31-2-19 Day1]# expr 10 \* 20
+200
+[root@ip-172-31-2-19 Day1]# expr 10 / 5
+2
+[root@ip-172-31-2-19 Day1]# expr 10 % 3
+1
+[root@ip-172-31-2-19 Day1]# n=5
+[root@ip-172-31-2-19 Day1]# expr $n + 1
+6
+[root@ip-172-31-2-19 Day1]# n=5
+[root@ip-172-31-2-19 Day1]# n=`expr $n + 1`
+[root@ip-172-31-2-19 Day1]# echo $n
+6
+[root@ip-172-31-2-19 Day1]# count=`ps -e|wc -l`
+[root@ip-172-31-2-19 Day1]# expr $count + 100
+204
+[root@ip-172-31-2-19 Day1]# n=`expr $count + 100`
+[root@ip-172-31-2-19 Day1]# echo $n
+204
+
+
+II) Compound style
+--------------------
+	$((expression))
+
+ echo "Total value:`expr 10 + 20`"  Vs  echo "Total value:$((10+20))"
+
+ va=10
+ vb=5
+
+ echo "Total value:`expr $va + $vb`"  Vs echo "Total value:$((va+vb))"
+							   
+ total=`expr $va + $vb`	Vs  total=$((va+vb))
+ 				     
+ expr 10 \* 3   Vs echo $((10*3))
+
+ n=5			Vs	n=5
+ n=`expr $n + 1`		((n++))   ((++n))  ((n--))  ((--n))
+ |
+ echo $n ->6 			
+ ------------------------------------------------------------------------------
+ both style (expr & compound ) won't supports floating point operation
+ ------------------------------------------------------------------------------
+
+  ->2. Relational 
+  -------------------
+	  |
+	  |--> string ("a-zA-Z0-9space specialchar")  == !=
+	  |
+	  |--> numbers (0-9) -eq  -ne -lt -le  -gt  -ge
+
+ `id -u` -eq  0  Vs    `whoami` == "root"
+  -------------- 	-----------------
+				
+  `ps -e|wc -l`  -gt 500
+
+  `lsmod|wc -l`  -lt 100 
+
+
+  ->3. Logical 
+  --------------- 
+  &&	-a 
+  ||	-o
+  !	!
+ --------------------------------------------------------------------------
+ 
+ test operator
+ ---------------
+ test (or) [ ]
+
+ Syntax:-
+ --------
+ test<space>Operand<space>Operator<space>operand
+
+ test 10 -eq 10
+ ---- ==========
+ test `whoami` == "root"
+
+ test `ps -e|wc -l` -gt 100
+
+ 	(or)
+ [<space>Operand<space>Operator<space>operand<space>]
+
+ [ 10 -eq 10 ]
+ 
+ [ `whoami` == "root" ]
+
+ [ `whoami` == "root"  -a $SHELL == "/bin/bash" ]
+   ------------------     ---------------------
+
+ [ $SHELL == /bin/bash  -o  $SHELL == /bin/ksh ]
+   -------------------      ------------------
+
+ $? <== specialvariable  - last command operation exit code
+
+ commandA
+ commandB
+ echo $?  ---- commandB exit status -> 0<==Success;non-zero <==failed
+ commandC
+  
+ [ $? -eq 0 ]
+ ... //success
+
+ [ $? -ne 0 ]
+ ...//failed  
+ ----------------------------------------------------------------------------
+ 
