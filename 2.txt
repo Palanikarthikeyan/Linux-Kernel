@@ -1,0 +1,562 @@
+ 
+Conditional statement -  Validation (or) Testing
+-----------------------
+ |->Code block - execute only one time - based on the bool(0 - True; non-zero - False)
+    -----------
+
+ |->if,case - keywords 
+    -------
+
+ if statement
+ ------------
+ 
+ 1) if only
+
+ 2) if..else 
+
+ 3) if..elif elif elif ..else
+	
+
+ 1) if only 
+ -------------
+ Syntax:-
+ ---------
+ if<space>[ condition ]
+ then	
+	Codeblock
+ fi
+ 
+ 2) if..else
+ -------------
+ Syntax:-
+ -----------
+ if<space>[ condition ]
+ then
+	True block
+ else
+	False block
+ fi
+ 
+ # if then else fi - keywords 
+ # ----------------
+
+ Write a shell script
+ |
+ test - total no.of process count is above 100 - True => display 1st 10 process
+				     ---------
+					|-False - display last 10 process
+  ps -e 
+  ps -e|wc -l
+
+  [ `ps -e|wc -l` -gt 100 ]
+  
+  ps -e|head
+
+  ps -e|tail
+
+ if [ `ps -e|wc -l` -gt 100 ]
+ then
+	echo "Top 10 process"
+	ps -e|head
+ else
+	echo "Last 10 process"
+	ps -e|tail
+ fi
+ 
+ Write a shell script
+ - read a port number from <STDIN>
+ |
+ - test if input port number is above 5000 - initialize app name is TestApp
+				below 5000 - initialize app name is demoApp
+ 
+ |
+ - display App name and its running port number.
+ 
+ read -p "Enter a port number:" port
+ 
+ if [ $port -gt 5000 ]
+ then
+	app="TestApp"
+ else
+	app="demoApp"
+ fi 						
+		
+ echo "App $app running port number is:$port"
+
+ 3. if..elif elif ...else
+ -------------------------
+ Syntax:-
+ --------
+ if<space>[ condition1 ]
+ then	
+	True block-1
+ elif<space>[ condition2 ]
+ then
+	True block2
+ elif<space>[ condition3 ]
+ then
+	True block3
+ ...
+ elif<space> [ ConditionN ]
+ then
+	True block N
+ else
+	False block 
+ fi
+ 
+ 
+ if [  ];then
+ 
+ Write a shell script - read a shell name from commandline
+			Note: commandline argument is not an empty 
+			      Commandline args not allows more than one input
+ 		
+ test input shell is bash - initialize profile filename is bashrc
+ test input shell is ksh  - iniitalize profile filename is kshrc
+ test input shell is csh  - initialize profile filename is cshrc
+ |
+ |
+ default shell name /bin/nologin  
+ default profile filename is /etc/profile
+ |
+ display - your shell name & profile filename. 
+ 
+ 
+ recap
+ -----
+ $1 $2 ..${n}
+ $# - total no.of args
+ --
+ |->return - int (number)
+
+ if [ $# -eq 0 ]
+ then
+	echo "Usage:Commandline args is empty"
+	exit # exit from script
+ fi
+ 
+ if [ $# -gt 2 ]
+ then
+	echo "Usage:Commandline args allows single input"
+	exit 
+ fi
+
+ if [ "$1" == "bash" ];then
+	fname="bashrc"
+ elif [ "$1" == "ksh" ];then
+	fname="kshrc" 
+ elif [ "$1" == "csh" ];then
+	fname="cshrc"
+ else
+	myvar="/bin/nologin"
+	fname="/etc/profile"
+	echo "Default login shell:$myvar profile file:$fname"
+	exit
+ fi
+ echo "shell name $1  profile filename is:$fname"
+-----------------------------------------------------------------------
+root@host~]#			arun@host~]$ mkdir /D1 ->Error - permission denied 
+						   ----
+root@host~]# mkdir /D1
+root@host~]# 
+
+
+ read a login name from <STDIN>
+ |
+ test login name is root (or) non-root
+		    ----      ===========
+		     |			|->exit from script
+		     |
+		   read a directory name from <STDIN>
+		   using mkdir create a newdirectory - under /
+			 -------------
+			 |->directory creation is done successfully (use $?)
+			 |->using ls -ld <dir> 
+ 
+
+ read -p "Enter a login name:" name
+ 
+ if [ $name == "root" ]
+ then
+	read -p "Enter a directory name:" dname
+	mkdir $dname
+	if [ $? -eq 0 ];then
+		echo "Directory $dname creation is success"
+		ls -ld $dname
+	else
+		echo "Directory $dname creation is failed"
+	fi
+ else
+	echo "Sorry your not a root user"
+	exit
+ fi			
+ ------------------------------------------------------------
+ File Test operators
+ --------------------
+  |->File mode(operation) - read   -r
+			    write  -w
+			    execute -x
+
+  |->File Types
+     -----------
+
+     1. Regular file (or) ordinary file  -f
+	
+		a. ASCII/Text - user can able to read/understand 
+		   (ex: p1.c p1.sh p1.java p1.log /etc/passwd etc.,)
+		
+		b. ELF - user can't able to read/understand
+		   ---
+		   (ex: linux commands,utilites etc.,)
+		
+     2. Directory -d
+     
+     3. Link file (or) symbolic link (or) softlink (or) symlink  -l
+	
+     4. Character type device file (ex: keyboard,printer) -c
+
+     5. Block type device file (ex: storage devices) -b
+
+     6. named pipe (or) FIFO -p
+	
+     7. socket file  -S
+
+
+ Test input file is reg.file or not ?
+
+  [ -f filename ]  
+  
+ Test input file is directory file or not ?
+   
+  [ -d filename ]
+
+ Test input file is executable file or not?
+		    ----------
+   [ -x filename ]
+
+ -e - existing or not 
+ ---
+ 
+ [ -f filename ]
+
+ [ -x filename ]
+
+ [ -f filename -a -x filename ]
+   ----------- == -----------
+	C1		C2
+
+ Write a shell script
+ |
+ read a filename from <STDIN>
+ test input file is existing or not
+			|	 |---msg - exit from script
+		   test input file is reg.file or not  ls -l <filename>
+		   test directory file or not	       ls -ld <filename>
+			
+			
+ read -p "Enter a filename:" fname
+ 
+ if [ -e $fname ]
+ then
+	if [ -f $fname ];then
+		echo "File:$fname is a reg.file"
+		ls -l $fname
+	elif [ -d $fname ];then
+		echo "File:$fname is a directory file"
+		ls -ld $fname
+	else
+		echo "File $fname is exists - its belogs to `file $fname`"
+	fi	
+ else
+	echo "Sorry file $fname is not exists"
+	exit
+ fi
+ --------------------------------------------------------------------------
+ case statement
+ ---------------
+  |->Conditional statement
+  |->Code block will execute only one time
+  |
+  Syntax:-
+  --------
+  case value in
+  pattern1)  pattern1 operation ;;
+  pattern2)  pattern2 operation 
+		;;
+  pattern3)  pattern3 operation
+		;;
+  ...
+  patternN)  patternN operation
+		;;
+  *)	     default operation
+  esac 
+
+  # case in esac - keywords 
+  # -------------
+
+ ------------------------------------------------------------------------
+  
+  command --- STDOUT (FD-1)
+     |
+     STDERR (FD-2)
+
+ uname ->Linux //STDOUT
+
+ unamee ->command not found    ---// STDERR
+ mkdir /D1 ->permission denied ---//STDERR
+
+
+ Redirection symbols
+ ---------------------
+  >  - create & write 
+  >> - append 
+ 
+ command FDValue>resultfile
+		  ----------
+		  |<== must be new file
+		  | if resultfile is already exists - overwrite existing content.
+ 
+ 
+ command >r1.log 2>err.log
+
+ command >result.log 2>&1
+		     -----
+			|->Via STDOUT(FD=1) redirect STDERR message to FILE
+ ----------------------------------------------------------------------------
+ command validation 
+ --------------------
+ if command <==
+ then
+	True
+ else
+	False
+ fi
+
+--------------------------------------------------------------------------------------------------------
+ Looping statements
+ ------------------
+ |->Code block - execute more than one time
+			 ------------------
+ |->1. Conditional style loop   - while 
+    2. Collection style loop    - for 
+
+ conditional style loop 
+ -----------------------
+ Syntax:-
+ ----------
+ initialization
+ 
+ while<space>[ condition ]
+ do
+	codeblock
+	arithmetic 
+ done
+ 
+ i=0
+ while [ $i -lt 5 ]
+ do	
+	uptime;sleep 2
+	i=`expr $i + 1`
+ done
+ -------------------------------------------------------------------
+  2. Collection style loop    - for 
+  ---------------------------------
+	
+ Syntax:-
+ ---------
+ for variable in <list of items>
+ do
+	Code block	
+ done
+ 
+ # for in do done - keywords 
+ # ----------------------------
+
+ for v in `ls *.log`
+ do
+  echo "File name:$v"
+  ls -l $v
+ done
+ 
+--------------------------------------------------------------------
+ break - exit from loop
+ |
+ continue - ignore current iteration 
+ 
+
+ Write a shell script 
+ 
+ initialize a pin number (ex: pin=1234)
+ |
+ using while loop - max limit is 3
+       ----------
+	|->Read a Pin number from <STDIN>
+	|
+	|->Test inputpin with existing pin
+		---------------------------
+			|->display - success message - count value
+
+ if all 3 inputs are failed  - pin blocked 
+
+ |
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ modify the above code - redirect success/failure message along with
+			 user input pin & what time user is entered 
+			 date/time ... - write/append to external file.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+ pin=1234
+ 
+ count=0
+
+ while [ $count -lt 3 ]
+ do
+	count=`expr $count + 1` # ((count++))
+	read -p "Enter a pin number:" p
+
+	if [ $p -eq $pin ];then
+		echo "Success pin is matched - $count"
+		break
+	fi
+ done	
+
+ if [ $p -ne $pin ];then
+	echo "Sorry your pin is blocked"
+ fi
+ -----------------------------------------------------------------------------
+ File Handling
+ -------------
+ 		    read	    echo
+ Keyboard(<STDIN>)-------- Script-----------Monitor(STDUT)
+			   ======
+			     |
+			     |
+			  Storage(FILE)
+ 
+ 
+ 1. Read a data from <FILE> -- script -- display to monitor (not using keyboard)
+
+ 2. script - create/write data to FILE (not using monitor)
+
+ 3. Read a data from <oneFILE> - Script - create/write data to another FILE
+ 						(not using I/O)
+ 
+ 1. Read a data from <FILE> -- script -- display to monitor (not using keyboard)
+ -----------  ----------- ----------- ----------- ----------- ----------- ----------- -----------
+ 
+ Syntax:-
+ --------
+ while read variable (2)
+ do
+	Codeblock(3)
+	
+ done<inputfile
+     ------------(1)
+
+ 
+  2. script - create/write data to FILE (not using monitor)
+ --------------------------------------------------------------
+  
+  c=0
+  while [  ]
+  do
+	...
+	$(( ))
+  done >resultfile 
+  
+
+ for v in item1 item2 item3
+ do
+	...
+ done >>resultfile
+
+ 3. Read a data from <oneFILE> - Script - create/write data to another FILE
+ 						(not using I/O)
+  
+ Demonstrate cp command  => cp file1 file2
+			    -- ===== =====
+ 
+ 
+ while read var(2)
+ do		
+	codeblock(3)
+
+ done<inputfile  >resultfile(4)
+	(1)
+
+ # like cp inputfile resultfile 
+ #      ------------------------
+
+ 
+ file: cmds.log
+ --------------
+ date
+ ps -f
+ uptime
+ hostname
+ uname -rs
+ sleep 3
+ echo "Thank you"
+
+
+
+ |-> write a shell script - read a file cmds.log - line by line
+			  - execute command - redirect command results to 
+			  - external file.
+--------------------------------------------------------------------------------------
+ Function
+ ---------
+ |->Code block 
+ |->collection (or) group of commands/scripts 
+ |
+ |->Code reusability 
+ |
+ |->function definition
+ |->function Call - To invoke a definition
+
+ Syntax:-
+ ---------
+ function functionName()
+ {
+ 	Code block 
+ }
+ 
+ # function - keyword (optional)
+
+
+ functionName - simple function call
+
+ ------------------------------------------------------------------------
+
+ file: fa.sh
+ -------------
+ display(){
+	uname -rs
+	uptime
+	hostname
+	whoami	
+	ps -e|wc -l
+ }
+ ------------------- //there is no function call
+ 
+ root@host~]# chmod a+x fa.sh
+ root@host~]# ./fa.sh 
+ root@host~]#
+ 
+ file:p1.sh	file:p2.sh	
+
+ source fa.sh   source /home/userA/project/fa.sh
+ display	display
+
+ 
+source (or) .<space><path>
+
+ . /home/userA/project/fa.sh 
+ |
+ -----------------------------------------
+ root@host~]# source fa.sh
+ root@host~]# display 
+ ...
+ ...
+ ----------------------------------------------------------------
