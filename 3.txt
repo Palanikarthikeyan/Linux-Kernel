@@ -1,0 +1,608 @@
+display(){
+	ls -l
+}
+
+display # simple function call
+
+#functionName<space>arg1<space>arg2<space>arg3 ... argN # function call with args
+#------------       =================================== 
+ 
+display p1.sh p2.sh p3.sh # function call with arguments 
+        -----------------
+
+Recap commandline args variables 
+      --------------------------
+	$1 $2 ..${n} 
+	$# - total no.of args
+	$@ - list of all 
+	
+
+display(){
+	echo $1 $2 $3	# p1.sh p2.sh p3.sh
+	echo $#		# 5
+	echo $@		# p1.sh p2.sh p3.sh p4.sh p5.sh
+	
+	ls -l $1 $2	# ls -l p1.sh p2.sh 
+}
+
+display p1.sh p2.sh p3.sh p4.sh p5.sh 
+------- ----- ===== ----- ===== ------
+display 
+	
+echo $1 $2 $3           #
+echo $#                 #
+echo $@                 # commandline args
+echo #########################
+
+f1(){
+        echo "This is f1 block"
+        echo $1 $2 $3
+        echo $#
+        echo $@
+        echo "Exit from f1 block"
+}
+f2(){
+        echo "This is f2 block"
+        echo $1 $2 $3
+        echo $#
+        echo $@
+        echo "Exit from f2 block"
+}
+f1 A B C D E # function call with args
+sleep 5
+f2 S1 S2 S3 S4 S5 S6 S7 # function call with args
+sleep 5
+echo $1 $2 $3           #
+echo $#                 #
+echo $@                 # commandline args
+echo #########################
+--------------------------------------------------------------------------------
+ Write a shell script
+ 
+ define a function name - nameTest - single argument
+			- test recived argument(or)format argument is root or not
+								      ----    ----
+	
+ nameTest(){
+	if [ $# -ne 1 ];then
+		echo "Usage: function nameTest will accept single argument"
+		exit
+	fi
+	
+	if [ $1 == "root" ];then
+		echo "Success"
+	else
+		echo "Failed"
+	fi
+	echo "Exit from nameTest"
+ }
+ read -p "Enter a login name:" name
+ nameTest $name  # function call with args
+ 
+
+ file: pa.sh
+ -------------
+ nameTest(){
+	if [ $# -ne 1 ];then
+		echo "Usage: function nameTest will accept single argument"
+		exit
+	fi
+	
+	if [ $1 == "root" ];then
+		echo "Success"
+	else
+		echo "Failed"
+	fi
+	echo "Exit from nameTest"
+ }
+------------------
+
+  
+ vi p1.sh					vi p2.sh
+ 						
+ source  pa.sh					source pa.sh
+						
+ read -p "Enter a login name:" name		nameTest $1 # from commandline args
+ nameTest $name					...
+ ...						----------------
+ ...						./p2.sh root {Enter}
+-----------------------
+
+ vi p3.sh
+ -----------
+ source pa.sh
+
+ if [ $# -ne 1 ];then
+	echo "Usage:Commandline arg - allows single args"
+	exit
+ fi
+
+ nameTest $1
+ ...
+ -------------------------
+ ./p3.sh root {Enter}
+ 
+
+ 
+
+
+ $FUNCNAME - display name of your function
+ ----------
+  |->we can use inside function definition only
+
+
+ $0 - in shell commandline - working shell name
+ --
+  |---->inside the file(script file) - working script filename 
+
+----------------------------------------------------------------------
+ 
+fx(){
+	port=5000
+	echo "from $FUNCNAME block - port=$port"
+}
+echo "Before function call - from main script port=$port"
+fx
+echo "After function call - from main script port=$port"
+ 
+--------------------------------------------------------------------------------
+ array
+ |
+ grep
+ sed
+ awk 
+ -------//supports Regx
+ |
+ Heredoc 
+ -----------------------
+
+ command ->success result - STDOUT - FD=1
+	   --------------		
+		|
+	redirect command result to file (Extend to storage)
+	-----------------------
+		>filename
+
+	date >r1.log -- same as -- date 1>r1.log
+					|_std STDOUT value
+	
+	..............................................................
+	execute a command - don't display command result to monitor
+			  - don't extend to storage 
+
+	ping -c 3 127.0.0.1 >/dev/null 2>&1
+	 
+		command >/dev/null 2>&1
+	..............................................................
+	
+	/dev/null - special file - character type device file
+	---------
+	|->cleanup - file size is 0
+
+	
+[root@student ~]# ls -lh process.log
+-rw-r--r--. 1 root root 25K Mar  7 01:35 process.log
+[root@student ~]# wc -l process.log
+736 process.log
+[root@student ~]# cp /dev/null process.log
+cp: overwrite ‘process.log’? y
+[root@student ~]# wc -l process.log
+0 process.log
+[root@student ~]# ls -lh process.log
+-rw-r--r--. 1 root root 0 Mar  7 01:36 process.log
+[root@student ~]#
+
+
+command ->failed result - STDERR - FD=2
+	  --------------		
+
+ redirect command error message to FILE  2>resultfile
+					 |-------------
+ command >resultfile 2>errfile
+		     |__required - to redirect error message
+
+ 
+ command >result.log 2>&1
+	  ---------- 
+
+ ping -c 3 IP >/dev/null 2>&1
+ 	
+ if [ $? -eq 0 ];then
+	....
+ else
+	....
+ fi
+ -----------------------------------------------------------------------------
+ Array
+ ------
+ |->variable - holding more than one value
+	     - index based
+	     - different types of value
+	     |
+	     - store command results/file content 
+
+ osA=unix
+ osB=Linux
+ osC=SunOS
+
+ Syntax:-
+ ---------
+ arrayname=(<list of items>) 
+
+ os=(unix linux sunos minix hpux) //valid
+
+ fsinfo=(xfs /dev/xvdb1 145 94.2 true) //valid	      
+ 
+ s=(unix red hat linux 7.5 "ubuntu 20.5" "oracle linux 6.7")
+	 --- --- ----- ---  -----------   ------------------
+
+ command ->single word/number => v=`command`
+ 
+ Vs
+ 
+ command ->more than one word/number/multiplelines => a=(`command`)
+
+	 			
+
+ os=(unix linux sunos minix hpux)
+       0    1     2     3    4 <== index
+      -5   -4    -3    -2   -1 <== index 
+
+ To access nth item -> ${arrayname[index]}
+
+ echo ${os[1]}	->linux
+ echo ${os[-4]}  ->linux
+
+ echo ${os[9]} ->empty 
+  
+ list of all the items => ${Arrayname[@]}
+			  ----------------
+
+ total no.of items -> ${#Arrayname[@]}
+		      ------------------//int
+  
+ 
+
+ read -a variable
+      -- ---------
+
+[root@ip-172-31-2-19 Day3]# read os
+unix linux minix winx
+[root@ip-172-31-2-19 Day3]# echo ${os[1]}
+
+[root@ip-172-31-2-19 Day3]# echo $os
+unix linux minix winx
+[root@ip-172-31-2-19 Day3]# read -a os
+unix linux minix winx
+[root@ip-172-31-2-19 Day3]# echo ${os[1]}
+linux
+[root@ip-172-31-2-19 Day3]# echo ${os[-1]}
+winx
+[root@ip-172-31-2-19 Day3]# echo ${os[@]}
+unix linux minix winx
+[root@ip-172-31-2-19 Day3]# ps|while read var
+> do
+> echo "$var"
+> done
+PID TTY          TIME CMD
+3293 pts/0    00:00:00 bash
+4298 pts/0    00:00:00 ps
+4299 pts/0    00:00:00 bash
+[root@ip-172-31-2-19 Day3]# ps|while read -a var # this is an array
+> do
+> echo "${var[0]}  ${var[-1]}"
+> done
+PID  CMD
+3293  bash
+4301  ps
+4302  bash
+[root@ip-172-31-2-19 Day3]# a=(PID TTY TIME CMD)
+[root@ip-172-31-2-19 Day3]# echo ${a[0]} ${a[-1]}
+PID CMD
+[root@ip-172-31-2-19 Day3]# a=(4298 pts/0 00:00:00 ps)
+[root@ip-172-31-2-19 Day3]# echo ${a[0]} ${a[-1]}
+4298 ps
+[root@ip-172-31-2-19 Day3]#
+-----------------------------------------------------------------------------------------------------
+ grep + Regx
+ sed  + Regx
+ awk  + Regx
+ ------------
+
+ grep - search only
+
+ sed - search + substitute
+
+ awk - search + format
+ 
+----------------------------------------------
+grep - search a pattern(text;number;space;specialchars etc)from input(file(or)PIPE)
+----
+
+grep -option pattern inputfile
+     -------
+
+Action: print (or) display matched pattern line
+Pattern: text 
+ 
+ -n - display matched pattern line number
+
+ -i - ignore case 
+
+ -c - count 
+ 
+ -e - Extented pattern <== -E
+
+ -f - attach pattern file
+
+ -l - list out matched pattern filename only
+ 
+ -o - pattern output only
+ 
+ Regular Expression (Regx)
+ ------------------ -------
+  		|
+		|
+    --------------------------------------------------
+    |						    |
+   BasicRegularExpression		Extended Regular Expression
+     (BRE)					(ERE)
+    - single pattern				- multiple pattern
+
+   ^					| ( ) +  {}  <= -E option is required in grep command
+
+   $
+  
+   ^pattern$
+
+   .
+
+   .*
+   
+   [ ]
+   ^[  ]
+    [  ]$
+    [^  ]
+
+    ^$
+ 
+ 
+ ^ -> ^pattern  - matches pattern line starts with 
+
+ $ -> pattern$  - matches pattern line ends with 
+ 
+ ^pattern$ - pattern only
+  -------
+  
+ .(dot) - match any single character except \n char
+ ------
+
+ .* - list of all 
+ 
+ character class []
+ --------------- 
+ |->character based search
+
+ grep [asv] IP
+      ------
+ aix  //matched
+ -   
+ bash //matched 
+  --   
+ csh //matched
+  - 
+ var //matched
+ --
+ 
+ grep [asv][ic] IP
+      ---------
+	ai ac
+	si sc
+	vi vc
+
+ aix
+ --
+ 
+ grep [Aavk]run    IP
+      ----------
+	|->Arun arun vrun krun //matched 
+
+ [a-z]
+ [A-Z]
+ [a-zA-Z]
+ [0-9]
+ [a-zA-Z0-9]
+ 
+ ^[a-z] 
+ ^[A-Z]
+ ^[a-zA-Z]
+ ^[0-9]
+
+ ^[a-zA-Z0-9]
+
+ ^[a-zA-Z0-9].*daemon.*[a-z]$
+  --------------------------
+  aasfsadsddaemonasdfdsafds //OK
+
+  Aasfasdfdsasddaemonasdfasdfds //OK
+
+  5asfadsfasddaemonasdfdash //OK
+
+  Aasfsadsdaemon, //Not-matched 
+
+ ^[ ]
+
+  [^  ] - NOT matching pattern
+
+  [^ab5] - NOT matching 'a' 'b' '5' 
+	   ------------------------
+ 
+ [^a-zA-Z0-9] - match space,specialchars
+
+ [^a-zA-Z0-9' '] - match specialchars
+ ---------------
+
+ character class			posix class
+ ---------------			-------------
+ [a-z]					[[:lower:]]
+ [A-Z]					[[:upper:]]
+
+ [a-zA-Z]				[[:alpha:]]
+ [0-9]					[[:digit:]]
+
+ [a-zA-Z0-9]				[[:alnum:]]
+
+ " "					[[:space:]]
+ [^a-zA-Z0-9' ']			[[:punct:]]
+
+  ^$ - empty line 
+  --
+
+  
+ -------------------------------------------------------------
+ ERE
+ ----
+ |  	-> pattern1|pattern2 ... any one pattern is matched  ->OK
+				 (any where)
+
+	grep -E "sales|DBA" emp.csv
+		 
+
+ grep -E "^[A-Za-z].*[0-9]$|^[[:space:]].*[[:punct:]]$" IP
+	  ----------------- --------------------------
+
+ 
+ () --> (pattern1)(pattern2) - both pattern should match (same order)
+ 
+ 
+ echo "shell supports ssh and sftp connection"|grep -E "(ssh)(sftp)"
+
+ <Pattern>+ - 1 or more
+	      ---------
+
+ ab+c -->abc abbbbbbbbbbbbbbbbbbbbbc //matched
+
+	 abbbbbbbbbbbb,bbbbbbbbbbbbc //not-matched 
+
+ ^[A-Za-z][0-9]+.*[a-z]$
+	  -------
+ 
+ <Pattern>{n}  - n times 
+
+ <Pattern>{n,} - minimum n times
+
+ <Pattern>{n,m} - minimum n times and maximum m times
+
+ ab{2}c ==> abbc //OK
+
+		
+ ab{2,}c =>abbc abbbbbbbbbbbbbbbbbbbbbbbbbbc //OK
+
+ ab+c  same as  ab{1,}c 
+  --		 ----
+
+ ab{2,4}c -->abbc abbbc abbbbc //OK
+
+ ps -e|grep -E "^[[:space:]]+[0-9]{3,4}.*(net|sys|job).*[a-e]$
+		---------------------------------------------
+				pattern only
+ [a-e] ->[abcde]
+ 
+	
+----------------------------------------------------------------------------
+ Write a shell script
+ |
+ read a url name from <STDIN>
+ 	---
+ |
+ url format is - starts with https (or) http followed by list of all
+			     ends with org (or) com
+			     -----------------------------------------//
+ 
+ https://www.abc.com - OK
+
+ https://www.abc.org - OK
+
+ http://www.abc.com - OK
+ http://www.abc.org - OK
+
+ https://www.abc.in - not matched 
+
+ ftp://abc.org - not matched 
+
+ http://abc.edu - not matched 
+ 
+ 
+ ^(https|http).*(com|org)$
+  -----------------------
+	|->pattern only
+ 
+-----------------------------------------------------------------
+ sed 
+ ----
+ 
+ sed -n '/pattern/p' input ---same as -- grep pattern input
+	
+ sed -n '/BRE/p' input ------same as --- grep BRE input
+
+ sed -nr '/ERE/p' input -----same as -- grep -E ERE input
+     
+
+ sed 
+ ----
+ sed -option 'patternAction' inputfile
+	      -------
+
+ pattern
+ -------
+	1. Line number (or) Address
+	2. /text/
+	   (Regx)
+
+ action
+ --------
+ print(p)	-n option is required
+ substitute(s)  
+ 
+ delete(d) 
+
+ 1. Line number (or) Address
+ ------------------------------
+  pattern is input file line number(N)
+
+ print ->	nth line
+ print ->	from nth line to mth line //range
+ print ->	nth line and mth line //not range 
+ 
+ print 3rd line content from emp.csv file -> sed -n '3p' emp.csv
+
+ print 5th line content from /etc/passwd ->sed -n '5p' /etc/passwd
+
+ ps -e|sed -n '10p' 
+ 	   --
+ 
+
+ print ->	from nth line to mth line //range
+
+ print 3rd line to 7th line 	=> sed -n '3,7p' emp.csv
+       ---------------------		  ------
+ 
+ print 3rd line and 7th line  ==> sed -n -e '3p' -e '7p' emp.csv
+       --------------------
+
+ 
+ delete (opp.print) 
+ 
+ substitute(s)
+ ------------------
+ |
+ sed 's/oldpattern/newstring/' inputfile
+	(Regx)
+
+ 
+ sed -n '2,5p' inputfile
+	 | |
+
+	'/pa/,/pn/p'
+	 ---  ---
+----------------------------------------------------------------------------------------------------
