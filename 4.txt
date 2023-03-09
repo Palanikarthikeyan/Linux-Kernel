@@ -1,0 +1,718 @@
+Recap 
+------
+ Kernel - File,Process
+	|
+	Shell - Types of shell
+	      - script(or)programming 
+		- variables
+		- operators
+		- conditional & loop
+		- FileHandling
+		- Function 
+ 	 - Filter + Regx
+	 ------
+	 grep - search
+	 sed  - search & substitute
+	 ----	....................
+ awk + regx
+ ---
+ |-->commandline filter
+ |-->programming language - like C style 
+				 
+---------------------------------------------------------------
+grep - search only
+sed  - search & substitute
+awk  - search & format
+-------
+
+grep -option pattern inputfile
+----	
+pattern -> text (or) string
+action  -> print (or) display 
+
+sed -option 'patternAction' inputfile
+---
+pattern ->  1.LineNumber (or) Address
+	    2./text/ (or) /string/
+
+action -> print(p) substitute(s) delete(d)
+
+awk -option '/pattern/{Action}' inputfile
+---
+pattern -> text (or) string
+action  -> print 
+
+ 
+step 1: read the data from FILE (or) PIPE - line by line
+|
+step 2: split each line into multiple columns ( -F<sep> )
+	//default FS is space
+			-----
+
+step 3: search
+|
+step 4: print - action
+
+File: IP.txt
+---------------
+userA:x:bin:bash
+userB:x:bin:ksh
+userC:x:bin:bash
+-----------------
+awk -F: '/bash/{print}' IP.txt
+
+
+step 1: read the data from FILE (or) PIPE - line by line
+
+	1 userA:x:bin:bash
+	---------------------
+	2 userB:x:bin:ksh
+	---------------------
+	3 userC:x:bin:bash
+	---------------------
+
+step 2: split - each row/record into multiple columns -F:
+	
+	NR $1   $2 $3  $4 (or) $NF
+	1 userA|x|bin|bash  |
+	-------|-|---|------|
+	2 userB|x|bin|ksh   |
+	-------|-|---|------|
+	3 userC|x|bin|bash  |
+	-------|-|---|------|
+	  |-----$0----------|
+ 
+step 3: search a pattern 
+|
+step 4: print 
+
+
+awk -F: '/bash/{print}' IP.txt
+userA:x:bin:bash
+userC:x:bin:bash
+
+awk -F: '/bash/{print NR,$1,$NF}' IP.txt
+ 
+ 1 userA bash
+ 3 userC bash 
+ --------------//default OFS is space
+
+
+ 
+awk -F: '/bash/{OFS="-";print NR,$1,$NF}' IP.txt
+ 
+ 1-userA-bash
+ 3-userC-bash 
+	 					
+
+awk -F: '/bash/{OFS=":";print NR,$1,$NF}' IP.txt
+ 
+ 1:userA:bash
+ 3:userC:bash 
+
+awk -F: '/bash/{OFS="\t";print NR,$1,$NF}' IP.txt
+ 
+ 1	userA	bash
+ 3	userC	bash 
+
+-----------------------------------------------------------------------------
+
+[root@student ~]# grep sales emp.csv
+101,raj,sales,pune,1000
+245,arun,sales,bglore,3000
+892,vijay,sales,pune,3123
+[root@student ~]#
+[root@student ~]# sed -n '/sales/p' emp.csv
+101,raj,sales,pune,1000
+245,arun,sales,bglore,3000
+892,vijay,sales,pune,3123
+[root@student ~]#
+[root@student ~]# awk '/sales/{print}' emp.csv
+101,raj,sales,pune,1000
+245,arun,sales,bglore,3000
+892,vijay,sales,pune,3123
+[root@student ~]#
+[root@student ~]# awk -F, '/sales/{print}' emp.csv
+101,raj,sales,pune,1000
+245,arun,sales,bglore,3000
+892,vijay,sales,pune,3123
+[root@student ~]#
+[root@student ~]# awk -F, '/sales/{print NR,$1,$2,$NF}' emp.csv
+1 101 raj 1000
+3 245 arun 3000
+5 892 vijay 3123
+[root@student ~]# awk -F, '{print NR,$1,$2,$NF}' emp.csv
+1 101 raj 1000
+2 234 leo 2000
+3 245 arun 3000
+4 524 leo 1245
+5 892 vijay 3123
+6 345 anu 3110
+7 241 theeb 1290
+8 512 bibu 1900
+[root@student ~]# echo "101 raj sales 1000"|awk '{print $2}'
+raj
+[root@student ~]# echo "101:raj-sales 1000"|awk '{print $2}'
+1000
+[root@student ~]# echo "101:raj-sales 1000"|awk '{print $1}'
+101:raj-sales
+[root@student ~]#
+[root@student ~]#
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F, '{print $1}'
+101
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F, '{print $2}'
+raj-sales~2ndFeb|1234
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"-" '{print $2}'
+sales~2ndFeb|1234
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"~" '{print $2}'
+2ndFeb|1234
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|grep "[^A-Za-z0-9' ']"
+101,raj-sales~2ndFeb|1234
+[root@student ~]#
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"[^A-Za-z0-9' ']" '{pri    nt $1}'
+101
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"[^A-Za-z0-9' ']" '{pri    nt $2}'
+raj
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"[^A-Za-z0-9' ']" '{pri    nt $3}'
+sales
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"[^A-Za-z0-9' ']" '{pri    nt $4}'
+2ndFeb
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"[^A-Za-z0-9' ']" '{pri    nt $5}'
+1234
+[root@student ~]# echo "101,raj-sales~2ndFeb|1234"|awk -F"[[:punct:]]" '{print $    5}'
+1234
+[root@student ~]#
+[root@student ~]# ps
+  PID TTY          TIME CMD
+ 2370 pts/0    00:00:00 bash
+ 4915 pts/0    00:00:00 ps
+[root@student ~]# free
+              total        used        free      shared  buff/cache   available
+Mem:        1014528      109612      770632        6792      134284      766868
+Swap:       1257468           0     1257468
+[root@student ~]#
+[root@student ~]# ps|awk '{print $1}'
+PID
+2370
+4947
+4948
+[root@student ~]# ps|awk '{print $2}'
+TTY
+pts/0
+pts/0
+pts/0
+[root@student ~]# ps|awk '{print $3}'
+TIME
+00:00:00
+00:00:00
+00:00:00
+[root@student ~]# ps|awk '{print $4}'
+CMD
+bash
+ps
+awk
+[root@student ~]# ps|awk '{print $1,$4}'
+PID CMD
+2370 bash
+4970 ps
+4971 awk
+[root@student ~]# ps -e|awk '/bash/{print $1,$NF}'
+871 bash
+2370 bash
+[root@student ~]# ps -e|awk '/bash/{print $1,$4}'
+871 bash
+2370 bash
+[root@student ~]# ps -e|awk '/bash/{print $1,$NF}'
+871 bash
+2370 bash
+[root@student ~]# awk -F, '/sales/{print NR,$1,$2,$NF}' emp.csv
+1 101 raj 1000
+3 245 arun 3000
+5 892 vijay 3123
+[root@student ~]# awk -F, '/sales/{OFS=":";print NR,$1,$2,$NF}' emp.csv
+1:101:raj:1000
+3:245:arun:3000
+5:892:vijay:3123
+[root@student ~]# awk -F, '/sales/{OFS="|";print NR,$1,$2,$NF}' emp.csv
+1|101|raj|1000
+3|245|arun|3000
+5|892|vijay|3123
+[root@student ~]# awk -F, '/sales/{OFS="\t|\t";print NR,$1,$2,$NF}' emp.csv
+1       |       101     |       raj     |       1000
+3       |       245     |       arun    |       3000
+5       |       892     |       vijay   |       3123
+[root@student ~]#
+[root@student ~]#
+[root@student ~]# ps -e|head -n 5
+  PID TTY          TIME CMD
+    1 ?        00:00:05 systemd
+    2 ?        00:00:00 kthreadd
+    3 ?        00:00:00 ksoftirqd/0
+    6 ?        00:00:00 kworker/u2:0
+[root@student ~]# ps -e|head -n 5|sed '1d'
+    1 ?        00:00:05 systemd
+    2 ?        00:00:00 kthreadd
+    3 ?        00:00:00 ksoftirqd/0
+    6 ?        00:00:00 kworker/u2:0
+[root@student ~]#
+[root@student ~]# ps -e|head -n 5|sed '1d'|awk '{OFS=",";print $1,$2,$NF}'
+1,?,systemd
+2,?,kthreadd
+3,?,ksoftirqd/0
+6,?,kworker/u2:0
+[root@student ~]# ps -e|head -n 5|sed '1d'|awk '{OFS=",";print $1,$2,$NF}' >p1.csv
+[root@student ~]#
+[root@student ~]# cat p1.csv
+1,?,systemd
+2,?,kthreadd
+3,?,ksoftirqd/0
+6,?,kworker/u2:0
+[root@student ~]#
+
+----------------------------------------------------------------------------------------------
+ [root@ip-172-31-2-19 Day4]# ps -e|awk '/^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$/{print}'
+ 1822 ?        00:00:00 systemd-journal
+ 1980 ?        00:00:00 systemd-udevd
+ 2715 ?        00:00:00 systemd-logind
+ 3170 ?        00:00:00 rsyslogd
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]# ps -e|grep -E '^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$'
+ 1822 ?        00:00:00 systemd-journal
+ 1980 ?        00:00:00 systemd-udevd
+ 2715 ?        00:00:00 systemd-logind
+ 3170 ?        00:00:00 rsyslogd
+[root@ip-172-31-2-19 Day4]# ps -e|grep '^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$'  [root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]# ps -e|sed -n '/^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$/p'
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]# ps -e|sed -nr '/^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$/p'
+ 1822 ?        00:00:00 systemd-journal
+ 1980 ?        00:00:00 systemd-udevd
+ 2715 ?        00:00:00 systemd-logind
+ 3170 ?        00:00:00 rsyslogd
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]# ps -e|grep -E '^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$'
+ 1822 ?        00:00:00 systemd-journal
+ 1980 ?        00:00:00 systemd-udevd
+ 2715 ?        00:00:00 systemd-logind
+ 3170 ?        00:00:00 rsyslogd
+[root@ip-172-31-2-19 Day4]# ps -e|awk '/^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$/{OFS="\t|\t";print NR,$NF,$1}'
+62      |       systemd-journal |       1822
+64      |       systemd-udevd   |       1980
+75      |       systemd-logind  |       2715
+82      |       rsyslogd        |       3170
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]# ps -e|awk '/^[[:space:]]+[0-9]{3,}.*(net|sys).*[a-z]$/{OFS="\t|\t";print $1,$NF}'
+1822    |       systemd-journal
+1980    |       systemd-udevd
+2715    |       systemd-logind
+3170    |       rsyslogd
+[root@ip-172-31-2-19 Day4]#
+
+
+------------------------------------------------------------------------------------------------------------------------
+ awk supports
+ --------------
+ - arithmetic operators
+ - relational operators
+ - logical    operators
+ 
+
+ - arithmetic operators
+  -----------------------
+ 
+[root@student ~]# awk -F, '/sales/{OFS="\t";print $2,$NF,$NF*0.12}' emp.csv
+raj     1000    120
+arun    3000    360
+vijay   3123    374.76
+[root@student ~]#
+
+ - relational operators
+   --------------------
+    == != < <= > >=
+
+ - Logical operators
+   -------------------
+    &&  || !
+
+ 
+[root@student ~]# awk -F, '/sales/{print}' emp.csv
+101,raj,sales,pune,1000
+245,arun,sales,bglore,3000
+892,vijay,sales,pune,3123
+[root@student ~]# awk -F, '$3 == "sales"{print}' emp.csv
+101,raj,sales,pune,1000
+245,arun,sales,bglore,3000
+892,vijay,sales,pune,3123
+[root@student ~]#
+[root@student ~]# awk -F, '$3 == "sales"{print NR,$1,$2,$NF}' emp.csv
+1 101 raj 1000
+3 245 arun 3000
+5 892 vijay 3123
+[root@student ~]# awk -F, '$3 == "sales"{OFS="\t";print NR,$1,$2,$NF}' emp.csv
+1       101     raj     1000
+3       245     arun    3000
+5       892     vijay   3123
+[root@student ~]#
+[root@student ~]# awk -F, '$NF >4000{OFS="\t";print NR,$1,$2,$NF}' emp.csv
+[root@student ~]#
+[root@student ~]# awk -F, '$NF >3000{OFS="\t";print NR,$1,$2,$NF}' emp.csv
+5       892     vijay   3123
+6       345     anu     3110
+[root@student ~]#
+[root@student ~]# awk -F, '$NF <3000{OFS="\t";print NR,$1,$2,$NF}' emp.csv
+1       101     raj     1000
+2       234     leo     2000
+4       524     leo     1245
+7       241     theeb   1290
+8       512     bibu    1900
+[root@student ~]#
+[root@student ~]# awk -F, '$NF >2000 && $NF <3000 {OFS="\t";print NR,$1,$2,$NF}' emp.csv
+[root@student ~]#
+[root@student ~]# awk -F, '$NF >2000 && $NF <3200 {OFS="\t";print NR,$1,$2,$NF}' emp.csv
+3       245     arun    3000
+5       892     vijay   3123
+6       345     anu     3110
+[root@student ~]# ps -e|awk 'NR >10 && NR <=15{print $1,$NF}'
+12 watchdog/0
+13 khelper
+14 kdevtmpfs
+15 netns
+16 perf
+[root@student ~]# cat -n emp.csv |sed -n '3p'
+     3  245,arun,sales,bglore,3000
+[root@student ~]# cat -n emp.csv |sed -n '3,6p'
+     3  245,arun,sales,bglore,3000
+     4  524,leo,HR,pune,1245
+     5  892,vijay,sales,pune,3123
+     6  345,anu,Hr,Hyderabad,3110
+[root@student ~]# cat -n emp.csv |sed -n -e '3p' -e '6p'
+     3  245,arun,sales,bglore,3000
+     6  345,anu,Hr,Hyderabad,3110
+[root@student ~]#
+[root@student ~]#
+[root@student ~]# cat -n emp.csv |awk 'NR == 3{print}'
+     3  245,arun,sales,bglore,3000
+[root@student ~]# cat -n emp.csv |awk 'NR > 2 && NR <=6{print}'
+     3  245,arun,sales,bglore,3000
+     4  524,leo,HR,pune,1245
+     5  892,vijay,sales,pune,3123
+     6  345,anu,Hr,Hyderabad,3110
+[root@student ~]# cat -n emp.csv |awk 'NR == 3 || NR == 6{print}'
+     3  245,arun,sales,bglore,3000
+     6  345,anu,Hr,Hyderabad,3110
+[root@student ~]#
+----------------------------------------------------------------------------------------------------------------------------
+ awk programming
+ ----------------
+ |->filename.awk 
+    -------------
+
+   preprocessing section -> BEGIN{ Action }    - not depends on the input
+	
+	Body		 -> /pattern/{action}  - depends on the input
+ 	
+   post-processing section -> END{ Action }    - not depends on the input
+						 depends on the Body section
+  -------------------------------------------
+
+
+ in commandline ->  -F, <== option
+
+ in script(awk) -> FS="," <== variable 
+
+
+ split() ->split single structure (string) into  multiple structure(array)
+	   |-------------------------------------------------------------|
+ 
+ split(inputString,outputArray,fsep)
+			       REGX 
+
+ awk array index start from 1 
+
+ syntax:-
+ ---------
+ arrayname[index]=value
+	   ^^^^^
+
+ BEGIN{
+ 
+  os[45]="unix"
+  os[123]="Linux"
+  os[54]="Qnx"
+
+  print os[45]
+  print os[123]
+  print os[54]
+ 
+  }
+
+  for(index in Array){
+	Array[index]
+  }
+ ---------------------------//awk array+for loop
+  |->in keyword
+
+
+ BEGIN{
+ 
+  os[45]="unix"
+  os[123]="Linux"
+  os[54]="Qnx"
+
+  for(x in os){
+	print os[x]
+  }
+
+ }
+
+ msg="data1 data2 data3:code:123:test:34.23 data4 data5"
+	$1   $2   ----------$3-------------  $4    $5   <= in awk
+			    ---
+			     |
+		  split($3,arr,":")
+		  
+		  print arr[1] ->data3
+		  print arr[2] ->code
+		  print arr[3] ->123
+		  print arr[4] ->test
+		  print arr[5] ->34.23
+
+			(or)
+
+		  for(x in arr){
+			print arr[x]
+		  }
+			   		
+
+
+ msg="data1 data2 data3:code-123,test~34.23 data4 data5"
+	$1   $2   ----------$3-------------  $4    $5   <= in awk
+			    ---
+		split($3,arr,[^a-zA-Z0-9])			 
+                
+		  for(x in arr){
+			print arr[x]
+		  }
+			   	
+ 
+awk
+---
+ 1.formatted style of result(command result)
+ 
+ 2.floating point operation
+
+ 3.split() - split single string into multiple values (array)
+
+------------------------------------------------------------------------------------------------------------
+Heredocument (or) Line oriented document  <<
+----------------------------------------------
+
+	[script]-----------------[ExternalTool]
+				  - python
+				  - DB
+				  - bc
+				  - any tools 
+
+				 python ->DS+function+class-object ....
+   shell-command		  DB ->SQL
+				  fdisk ->....
+				  
+  				  DB: select *from DB <== SQL
+
+ echo "select *from table"
+       ------------------
+		|------------------------>.....
+
+ echo "import os"
+
+
+[root@ip-172-31-2-19 Day4]# python
+Python 2.7.18 (default, May 25 2022, 14:30:51)
+[GCC 7.3.1 20180712 (Red Hat 7.3.1-15)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sys
+>>> sys.version
+'2.7.18 (default, May 25 2022, 14:30:51) \n[GCC 7.3.1 20180712 (Red Hat 7.3.1-15)]'
+>>> sys.platform
+'linux2'
+>>>
+[root@ip-172-31-2-19 Day4]# python<<Abc
+> import sys
+> print(sys.version)
+> print(sys.platform)
+> Abc
+2.7.18 (default, May 25 2022, 14:30:51)
+[GCC 7.3.1 20180712 (Red Hat 7.3.1-15)]
+linux2
+[root@ip-172-31-2-19 Day4]# v=`python<<Abc
+import sys
+print(sys.version)
+print(sys.platform)
+Abc`
+[root@ip-172-31-2-19 Day4]#
+[root@ip-172-31-2-19 Day4]# echo "$v"
+2.7.18 (default, May 25 2022, 14:30:51)
+[GCC 7.3.1 20180712 (Red Hat 7.3.1-15)]
+linux2
+
+
+
+ command<<Flag
+	...
+	...
+	...
+	...
+ Flag
+
+ python<<Abc
+	import sys
+	print(sys.version)
+	....
+	....
+	....
+	....
+ Abc
+
+
+ v=`python<<Abc
+ import sys
+ print(sys.version)
+ Abc`
+ 
+-----------------------------------------------------------------------------
+Signals
+-------
+  ->signals are asynchronous notification
+  |
+  -> A signal sent from the kernel to a process
+  |
+  -> kill -l 
+
+ SignNumber)SIGNAME
+ 
+ root@host~]# echo Hello;sleep 5;echo Bye
+ Hello			 -------
+ Bye				|_SIGALARM
+  
+ root@host~]# date 
+  ... 
+ root@host~]# SIGCHLD 
+
+ kill -9 <PID>
+      ---
+	|__Signal Number SIGKILL
+
+ 
+ ping 127.0.0.1
+ ...
+ ... R+ Running 
+ ...
+ ... press Ctrl+C (Exit Signal )  (or) Ctrl+Z (Stop Signal)
+				       -----------------------
+					|->we can resume 
+  trap
+  --------
+
+  trap functionCall <SignalNumber>  ..
+  trap command  <SignalNumber> 
+
+  trap 'echo "Exit Signal is disabled"' 2
+
+signal(SIGname,Handler) //systemcall
+ 		|
+		int Handler(int signo){
+			Action
+		}
+----------------------------------------------------------------------------------------------------------------------------
+  
+
+ --------
+ systemcall()
+ |
+ Kernel DS - pre-defined in .h 
+ |
+ ..
+ |->.ko
+ ---------
+
+ #include<stdio.h>
+
+ int main(){
+	printf("Hello\n"); - lib function ===> write(1,"Hello\n",6)=FD
+	return 0;
+ }
+ ------------------------
+
+ gcc 
+ gdb 
+ 
+
+ vi ab.h			file: p1.c
+ 			
+ #include<stdio.h>		#include "ab.h"
+ #include<unistd.h>			
+ #include<stdlib.h>		int main(){
+					...
+ :wq				}
+	
+ gcc p1.c ->by default a.out <==ELF
+
+ gcc -o p1 p1.c
+     ----- =====
+	|    |__ASCII/TEXT
+	|
+	ELF
+
+  file /bin/date ->ELF ....
+  
+  file ./p1   -->ELF ...
+
+
+ 1. pre-processing 
+ 2. compiling
+ 3. assembling
+ 4. linking 
+
+
+ 1. pre-processing			gcc -E p1.c >p1.i
+ ----------------------
+ 1. comments removal  //single line
+		      /*.....mutliline
+			    comment */
+
+ 2. macros expansion  #define  F 1.4
+
+ 3. File inclusion  #include<filename>
+
+ 
+ 2. compiling		gcc -s filename.c 
+ -------------
+ file.i ->assemble file(file.s) //low-level code
+
+ 
+ 3. assembling
+ ----------------
+  assembly level code (.s) -> machine-understandable code //using assembler
+			      --------------------------
+				object code
+ file.o 
+		
+ push ...	(Assembler)   010101
+ call esp		      101010
+ --------		      ---------
+ file.s				file.o
+ 
+ 4. Linking
+ -------------
+ file.o <--->link with .. <libFiles>
+
+ 101010
+ 100100	   (Linker)	10101
+ ------			01010
+ file.o			--------
+			  |->file (or) a.out
+			  |->Executable object file
+
+------------------------------------------------------------------------------
