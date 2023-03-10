@@ -1,0 +1,553 @@
+ systemcall
+ ----------
+ - function that allows a process to communicate with the linux kernel .
+ 
+ 
+ User: echo Hello   printf("Hello")  cout <<"Hello" print("Hello") p("Hello")
+ ----- =============================================================
+ |
+ Kernel:   write("Hello")
+
+ systemcall()=FD   
+
+ FD=-1 <== FailedCall -?
+
+ FD=0x1234 <== memory - OK
+ |
+ FD=0 (STDIN)  FD=1(STDOUT)  FD=2(STDERR)
+
+ FD=3 to 2 pow 32/64 - Valid Call
+
+
+ strace command
+ ------ =======
+
+ strace ./p
+	----
+
+ +++ ...
+ +++ ...
+
+ strace -c command # Count number of systemcall
+
+ strace -e trace=<systemcall> command # To trace particular system call
+ 
+ ex: strace -e trace=open date
+     strace -e trace=write ls
+     strace -e trace=mmap  ./obj
+  
+ strace -r command # timestamp for each call (relative timestamp)
+ strace -T command # time spent on systemcall
+ strace -t command # clock time of each systemcall
+--------------------------------------------------------------------------------------------------------
+ File 
+ |
+ File Types
+ |
+ File Directory-structure 
+ |
+ File permission
+ |
+ File System
+ -----------------------------------------------
+ File - data - under the storage 
+ |
+ File types
+ ------------
+ 1.reg.file 2.directory 3.linkfile 4.char 5.block 6.namedpipe 7.Socket
+ |
+ File Directory structure
+ -------------------------
+		/
+		|
+	--------------------
+	|	|     ..  |
+	/	/	  /
+	
+ Filepermission
+ ---------------
+ read(r)  write(w)  execute(e)
+  |
+ 
+ Filesystem - Datastructure 
+ ...........
+
+  /proc		/	  /D1	 /..	<== user view - mountpoint 
+  |		|	   |	 |
+-------------------------------------------------------------
+  systemcall
+  |
+ --------------------------------------------------
+ proc  xfs/ext/btrfs     nfs    ocfs    vfat   ... <== VFS
+ --------------------------------------------------
+ ..		|	  |	 |	|
+ |		|	  |		..
+ CPU	     Storage     network			<== H/W
+	     (FILE)	
+
+ 
+cp p1.txt p2.txt
+cp p1.txt /tmp/p2.txt
+
+cp /mnt/USB/pa.txt ~/p3.txt
+
+cat pp.log ->No Such a file 
+
+mkdir /D1 ->permission denied 
+
+scp p1.txt host02:/root/ 
+...
+---------------------------------------------//user 
+ |
+ systemcall()   
+ |
+ filesystem - 
+
+ HardDisk - ext4;xfs
+ CDROM/USB - iso960
+
+ 
+
+ cat /proc/filesystems
+
+ 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+   /dev/sdb  -> /dev/sdb1  /dev/sdb2
+
+		mkfs.xfs /dev/sdb1  mkfs.xfs /dev/sdb2
+
+		mkdir /D1 /D2
+
+		df -T |grep -e/dev/sdb1  -e /dev/sdb2;echo $? ->1
+		------
+		|->Currently mounted partition
+
+		mount /dev/sdb1 /D1
+		mount /dev/sdb2 /D2 		
+
+		df -T |grep -e/dev/sdb1  -e /dev/sdb2;echo $? ->0
+
+		cd /D1 
+		ps >p1.log
+		vi p1.c
+		..
+		:wq
+		gcc p1.c -o p1
+		./p1	
+		...
+		pwd ->/D1
+		cd ..
+		umount /dev/sdb1 - de-attach the kernel <==
+		ls /D1
+		empty 
+		mount /dev/sdb1 /D1  <==
+		ls /D1
+		p1.log p1.c p1 
+		-----------------//present 
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+struct bootblock{
+
+	struct superblock{
+
+			struct inodeblock{}
+			..
+			..
+			..
+	}
+}
+  
+   
+
+ +---------------+
+ | p1.txt | 1000 |
+ | p2.txt | 1002 |
+ | p3.c   | 4500 |
+ +---------------+
+
+
+						
+	+-----------+			+---------------------+
+	| 1000	    |			| about p1.txt(1000)  |
+	| 1002	    |			|   file details      |
+ 	| 4500	    |			+---------------------+
+	+-----------+
+  					+---------------------+
+					| about p2.txt(1002)  |
+					|   file details      |
+					+---------------------+
+
+ Plain Text Data - User Content
+ ----------------
+  Meta data - Filesystem 
+ ----------------
+  Raw data - HD 
+
+ 	File Descriptor		FileTable(Global struct - in kernel)
+	----------------
+	p1.txt - FD=3 ----------->| Permission (FD,user,mode)
+				  | -----------
+ 					|
+				  | Ref.count
+				  |
+				  |   ->inode
+
+	cat p.txt -FD=4	-----------| Permission ...
+						|
+						|
+	--------------<---STDERR-----------------
+		permission denied	# won't update ref.count
+
+ 
+ 	+-------------------------+
+	|    Contents		  |
+	+-------------------------+
+	|  Lession	| pageNo  |
+	+---------------|---------|
+	| 1. Linux      |  15     |
+	| 2. process    |  25     |
+	| 3. Memory     |  69     |
+	| 4. Device     |  123    |
+	| 5. Network    |  226    |
+	+-------------------------+
+
+
+	15...24 <== inode knows 
+	  ...
+	  ... Data(Storage) <= Disk
+	  ...
+
+----------------------------------------------------------------------------------------------------------------------------
+ #include<unistd.h>
+ #include<fcntl.h> O_RDONLY....//mode 
+
+
+ perror() // display os error message - validation 
+
+
+ cat IP	 = FD=3
+ abcd
+ cat IP  = FD=4
+ abcd
+
+ Vs
+ 
+ cat IP	 = FD=3
+ abcd	    ...
+ efg	    ...
+ 
+ Vs
+ cat IP -> initialize this FD value to another variable(newFD)
+ |
+ newFD - read 4 chars 
+	
+	open(IP)=>3 =>newFD=3
+		       ----
+			|->read(FD,...)
+			|->read(newFD,...)
+
+
+newFD=dup(oldFD)
+-----
+ - creates a copy of a filedescriptor
+ - it uses the lowest number (or) unused number
+ 
+dup2(oldFD,newFD)
+	   .....
+-----------------------------------------------------------------------------
+ creat  - create a file <== creat("resultfile",mode)
+  |
+ write - write data to file(created file) <== write(fd,msg,size)
+  |
+ close - close a file <==close(fd)
+  |
+ chmod - Assign file permission <== chmod("resultfile",0666)
+	
+ -------------------------------------------------------------------------
+ O_WRONLY  >
+ O_APPEND  >>
+ 
+ #include<sys/stat.h>
+
+ struct stat sv;
+ fd=open("/root/emp.csv",O_RDONLY);
+ fstat(fd,&sv);		
+ printf("%d\n",sv.st_ino)
+ ..
+ ..
+ ----------------------------------------------------------------------------
+
+ f=creat("Resultfile",O_WRONLY)
+
+    Vs
+
+ f=open("Resultfile",O_CREAT|O_RDWR)
+ 
+
+
+ f=open("Resultfile",O_CREAT|O_RDWR|O_APPEND) 
+------------------------------------------------------------------------
+
+ file: ab.txt
+ --------------
+ data1
+ data2
+ data3
+ ---------------
+  - index: 1001
+  - mode: rw-rw-r--
+  - fsize: 5KB
+
+ cp ab.txt newab.txt <==
+
+ cat newab.txt <==
+ data1
+ data2
+ data3
+
+ ls -i newab.txt <==
+  - index: 1004     
+  - mode: rw-rw-r--
+  - fsize: 5KB
+ 
+ cat >>ab.txt
+ data4
+ data5
+
+ cat ab.txt
+ data1
+ data2
+ data3
+ data4
+ data5
+
+ cat newab.txt
+ data1
+ data2
+ data3
+
+ --------------------------------------------------------
+ link - like a copy
+
+ ->Hardlink	=> ln sourceFile targetFile
+ |
+ |
+ ->softlink 	=> ln -s sourceFile targetFile
+ 
+ 
+->Hardlink	=> ln sourceFile targetFile
+ 
+ file:ab.txt
+ -------------
+ data1
+ data2
+ data3
+ -------------
+  - index: 1001
+  - mode: rw-rw-r--
+  - fsize: 5KB
+
+ ln ab.txt sab.txt {Enter} <== 
+
+ cat sab.txt
+ data1
+ data2
+ data3
+
+ cat >>ab.txt
+ data4
+ 
+ cat ab.txt
+ data1
+ data2
+ data3
+ data4
+ cat sab.txt 
+ data1
+ data2
+ data3
+ data4 <==
+ vi sab.txt
+ data1 <== delete this line
+ data2 <== delete this line
+ :wq
+
+ cat sab.txt
+ data3
+ data4
+
+ cat ab.txt
+ data3
+ data4
+ 
+
+ ls -l ab.txt
+ -rw-rw-r-- <2>	......     ab.txt
+	     |__LinkCount 
+ 
+ ls -i ab.txt <== 
+ 1001
+
+ ls -l sab.txt
+ -rw-rw-r-- <2>...	sab.txt
+	     |__LinkCount
+ 
+ ls -i sab.txt  <===
+ 1001 		
+ 
+ User:  ab.txt    sab.txt
+	 |	   |
+	1001	1001 
+ --------|---------|---------
+  Kernel  < index > 
+	 |  1001
+	 |
+ -------------------------------
+	File(Storage)
+		
+ ln p1.c p2.c 
+
+ vi p1.c 
+ ...
+ ...
+ ...
+ ...
+ rm p1.c 
+ we can access p2.c file 
+
+ ln ab.txt sab.txt
+
+ - both index number is same 
+ - link count is increased (1+1=2)
+ |
+ - if ab.txt(source file) is not exists - we can access target file(sab.txt)
+					  ----------------------------------
+						-link count is 1 
+ 
+ ---------------------------------------------------------------------------------
+ softlink (or) link (or) symlink file 
+ ------------------------------------
+ ln -s source target
+
+ ln -s ab.txt newab.txt
+
+ newab.txt is link file
+ ---------
+
+ ls -i ab.txt
+ 1001
+ 
+ ls -i newab.txt
+ 1005 
+ 
+ ls -l ab.txt
+ rw.. <1> ...ab.txt
+       |
+       |__Singlelink
+
+ ls -l newab.txt
+ lrw...<1>
+	|
+	|__Singlelink
+	 
+ cat ab.txt
+ data1
+ data2
+
+ cat >>ab.txt
+ data3
+
+ cat ab.txt
+ data1
+ data2
+ data3
+ 
+ cat newab.txt
+ data1
+ data2
+ data3 
+
+ 
+ User:  ab.txt --<---newab.txt <== ln -s ab.txt newab.txt
+	 |	     (1005)			----------
+	1001	 
+ --------|------------------
+  Kernel  < index > 
+	 |  1001  1005
+	 |
+ -------------------------------
+	File(Storage)
+
+
+ if source(ab.txt) file is not present,then target file(newab.txt) is broken
+ file(not accessable)
+ 
+ symlink(source,target) <== ln -s soruce target
+ 
+ link(soruce,target) <== ln source target
+ 
+--------------------------------------------------------------------------------------------------------
+ cp source target		Vs	ln source target / ln -s source target
+ ----------------			---------------------------------------
+ target file is exists			Hardlink
+ - we can overwrite			softlink
+   in cp (copy)				----------//target file must be new
+-----------------------------------------------------------------------------------------------------------
+ open/creat
+ read/write
+ close
+ chmod
+ dup/dup2
+ fstat/stat
+ link/symlink/rmlink
+ 
+ scandir()
+ opendir()
+ chardir()
+ mkdir()
+------------------------------------------------------------------------------
+ 
+ 			
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
