@@ -1,0 +1,594 @@
+Recap
+-------
+ File - Data - under the storage
+ ====
+ File Types
+ =============
+ 1.Reg.file
+ 2.Directory
+ 3.Link (or) soft link (or) symlink
+ 4.Character 
+ 5.Block
+ 6.named pipe (or) FIFO
+ 7.Socket 
+
+ File Directory structure - /
+ ========================
+		/
+		|
+	----------------------
+	|	|	| .. |
+	/	/	/    /
+
+ File System - (Kernel structures)
+ ============ 
+ cat /proc/filesystems
+
+ -------------------------------
+	systemcall
+	|
+	FileSystem - VFS
+	|
+	DD
+	|
+	DC
+
+
+ proc	 xfs/ext4 	iso9660	    nfs   vfat .... 
+ 	 ---------
+	  |
+	  BootBlock|SuperBlock|Inode|DataBlock
+	  .........|----------------|..........
+			|	|
+			 info - meta data //structure 
+ 
+ open
+ read
+ write
+ fstat / stat
+ dup/ dup2
+ ..
+ ----------------------------------------------------------------------------
+ Process
+ -------
+ - Linux process
+ |
+ - user process  Vs system process
+ |
+ - system process - service file //conf file
+ |
+ - process manipulation commands 
+ |
+ - process - system calls
+ |
+ - proc - /proc 
+    |
+    filesystem
+ ----------------------------------------------------------------------------
+ Linux(Kernel) - File,Process
+ -------------
+ File - Data - Under the Storage
+ |
+ Process - Data - Under the CPU
+			    ----
+			    1.fetch
+			    2.stores - cpu register
+			    3.execute
+  ->A running instanace of a program(data/file) is called a process.
+ 
+  Process(PID)
+	  ---
+	   |->process attrs
+
+ OFF =>Switch ON PC =>POST =>MBR =>BootLoader(Grub/grub2) =>Kernel =>process(init,systemD)
+							  |       	|
+							initramfs	|
+									|
+ init - PID:1	  systemd - PID:1					|
+								   system process(?)
+ init		systemd							|
+ |		 |						getty(?) //login:___ password:___
+ p2	--------------------						|
+ |	|	|	.. |						|
+ p3	p2	p3	.. pN <== unit 				     shell(CLI) Vs  Desktop(GUI)
+ |									|
+ p4	.service 						     User I/O(user process)
+	.scope
+	.slice
+	.mount
+
+	
+ 1. User process			2. System process
+ -----------------			--------------------
+  by user				 by init/systemD
+  |					 |
+  TTY:pts/port				TTY: ?
+  |					 |
+  parent is working shell		parent is init/systemD	
+  |					 |
+  start ->R+ ->Exit			start ->R+ //background
+	  ||  -------				||
+	 Stop     				stop
+  |					
+  |
+  After Successful login
+  shell will get start
+  |
+  then user process get started.
+ 
+ root@host~]# command(newprocess - child)
+		      -------------------
+			 - user process
+ ----------------------------------------------	
+ while(1){
+
+	system("uptime >>/var/log/LB.log");
+	sleep(10);
+ }
+ ----------------------------------------------
+ file: p1.c
+ -----------
+ #include "ab.h"
+ int main(){
+ while(1){
+	system("uptime >>/var/log/LB.log");
+	sleep(10);
+ }
+ return 0;
+ }
+ --------------
+ root@host~]# gcc -o p1 p1.c
+ root@host~]# ./p1 {enter}
+
+ press Ctrl+C 
+
+ root@host~]# ./p1 & {Enter}
+ [1] <PID>
+ root@host~]# jobs 
+ [1] ... Running ... ./p1 
+
+ root@host~]# ps -e|grep p1
+ <PID> pts/<port> ... ./p1 
+       ----------
+	|->user process
+ 
+	Vs
+
+ root@host~]# ps -e|grep p1
+ 
+ <PID>  ? ... ./p1 
+       ----------
+	|->system process
+ 
+
+ root@host~]# ssh <remoteIP> {Enter}
+	      ----------------------------//user process
+		|
+		|
+	       sshd.service - R+ //system process
+
+ root@host~]# mysql -u root -p ... {enter}
+ mysql>	      -------------------------------//user process
+ mysql>		|
+		|->mysqld.service //R+ - system process
+
+ 
+ systemctl -t service - List of service files
+ --------------------
+
+
+ ssh - command - File - /bin/ssh (or) /usr/bin/ssh
+ ---
+ |
+ sshd.service - file
+ -------------
+	|
+	ExecStart=/bin/sh (or) /usr/bin/ssh 
+	--------- ===========================
+_______________________________________________________________________________
+
+ file: p1.c
+ -----------
+ #include "ab.h"
+ int main(){
+ while(1){
+	system("uptime >>/var/log/LB.log");
+	sleep(10);
+ }
+ return 0;
+ }
+ --------------
+ 
+ systemctl status sshd (or) systemctl status sshd.service 
+ 
+
+ To create our own service file  
+ --------------------------------
+ |
+ step 1:  create your service file /etc/systemd/system/filename.service 
+
+ step 2:  [Unit]
+	  Description="own message" 
+	
+	  [Service]
+	  ExecStart=<Actual binary file> (or) Executable file 
+
+	  [Install]
+	  WantedBy=multi-user.target
+
+ step 3: reload the daemon 
+	 systemctl daemon-reload 
+
+ step 4: enable service  - systemctl enable file.service 
+
+ step 5: start a daemon - systemctl start filename.service
+-----------------------------------------------------------------------
+  systemctl start myfile.service
+
+  systemctl status myfile.service
+  
+  systemctl stop myfile.service 
+  
+  systemctl restart myfile.service
+  ------------------------------------
+	   
+  systemctl stop myfile
+
+  ps -ef|grep pobj
+	      -----
+
+  systemctl start myfile 
+  
+  ps -ef|grep pobj
+	      -----
+ ----------------------------------------------------------------------------------
+ nice (NI)
+
+ -20 -19 -18 ..  2 1 0 1 2 3 4 .. 19 20
+ ------------------- |  -----------------
+	High	     |		Low
+		     |
+		default NICE Value is 0
+ 
+nice --19 command
+      ------
+	|-> -Ve (High)
+
+nice -19 command
+     ----
+	|-> +Ve (Low) 
+
+renice -19 --18 command
+------
+ 
+
+
+ps
+ps -e (or) ps -A
+ps -a 
+ps -l
+ps -f
+ps -elf
+ 
+jobs
+fg % <eventID>
+ 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[root@student L1]# ./pobj &
+[1] 17365
+[root@student L1]# ping 127.0.0.1 >/dev/null &
+[2] 17372
+[root@student L1]# cat >p2
+^Z
+[3]+  Stopped                 cat > p2
+[root@student L1]# ping google.com
+PING google.com (142.250.192.46) 56(84) bytes of data.
+64 bytes from bom12s15-in-f14.1e100.net (142.250.192.46): icmp_seq=1 ttl=60 time=27.4 ms
+64 bytes from bom12s15-in-f14.1e100.net (142.250.192.46): icmp_seq=2 ttl=60 time=28.2 ms
+64 bytes from bom12s15-in-f14.1e100.net (142.250.192.46): icmp_seq=3 ttl=60 time=25.5 ms
+^Z
+[4]+  Stopped                 ping google.com
+[root@student L1]#
+[root@student L1]# jobs
+[1]   Running                 ./pobj &
+[2]   Running                 ping 127.0.0.1 > /dev/null &
+[3]-  Stopped                 cat > p2
+[4]+  Stopped                 ping google.com
+[root@student L1]# fg %1
+./pobj
+^C
+[root@student L1]# jobs
+[2]   Running                 ping 127.0.0.1 > /dev/null &
+[3]-  Stopped                 cat > p2
+[4]+  Stopped                 ping google.com
+[root@student L1]# fg %3
+cat > p2
+[root@student L1]# jobs
+[2]-  Running                 ping 127.0.0.1 > /dev/null &
+[4]+  Stopped                 ping google.com
+[root@student L1]# fg %4
+ping google.com
+64 bytes from bom12s15-in-f14.1e100.net (142.250.192.46): icmp_seq=4 ttl=60 time=29.7 ms
+64 bytes from bom12s15-in-f14.1e100.net (142.250.192.46): icmp_seq=5 ttl=60 time=27.1 ms
+64 bytes from bom12s15-in-f14.1e100.net (142.250.192.46): icmp_seq=6 ttl=60 time=26.5 ms
+^C
+--- google.com ping statistics ---
+6 packets transmitted, 6 received, 0% packet loss, time 100426ms
+rtt min/avg/max/mdev = 25.503/27.434/29.787/1.347 ms
+[root@student L1]#
+[root@student L1]# jobs
+[2]+  Running                 ping 127.0.0.1 > /dev/null &
+[root@student L1]# fg %2
+ping 127.0.0.1 > /dev/null
+^Z
+[2]+  Stopped                 ping 127.0.0.1 > /dev/null
+[root@student L1]# jobs
+[2]+  Stopped                 ping 127.0.0.1 > /dev/null
+[root@student L1]#
+[root@student L1]#
+[root@student L1]# jobs
+[2]+  Stopped                 ping 127.0.0.1 > /dev/null
+[root@student L1]#
+[root@student L1]#
+[root@student L1]# bg %2
+[2]+ ping 127.0.0.1 > /dev/null &
+[root@student L1]# jobs
+[2]+  Running                 ping 127.0.0.1 > /dev/null &
+[root@student L1]# jobs -p
+17372
+[root@student L1]# kill 17372
+[root@student L1]#
+[2]+  Terminated              ping 127.0.0.1 > /dev/null
+[root@student L1]# jobs
+[root@student L1]#
+[root@student L1]# ps
+  PID TTY          TIME CMD
+16017 pts/1    00:00:00 bash
+17543 pts/1    00:00:00 ps
+[root@student L1]#
+
+
+[root@student L1]# ps -ef|grep pobj
+root     16678     1  0 22:30 ?        00:00:00 /root/Dx/L1/pobj
+root     16970 16017  0 22:42 pts/1    00:00:00 grep --color=auto pobj
+[root@student L1]# ps -f
+UID        PID  PPID  C STIME TTY          TIME CMD
+root     16017 16009  0 22:16 pts/1    00:00:00 -bash
+root     16975 16017  0 22:42 pts/1    00:00:00 ps -f
+[root@student L1]# ps -ef|grep sshd
+root      1088     1  0 17:21 ?        00:00:00 /usr/sbin/sshd -D
+root     16009  1088  0 22:16 ?        00:00:01 sshd: root@pts/1
+root     16985 16017  0 22:42 pts/1    00:00:00 grep --color=auto sshd
+[root@student L1]#
+[root@student L1]# ps
+  PID TTY          TIME CMD
+16017 pts/1    00:00:00 bash
+17139 pts/1    00:00:00 ps
+[root@student L1]#
+[root@student L1]# #ps -e (or) ps -A
+[root@student L1]#
+[root@student L1]# # ps -e|grep <PID>
+[root@student L1]# # ps -e|grep -i <processName>
+[root@student L1]#
+[root@student L1]# ps -o pid,cmd
+  PID CMD
+16017 -bash
+17156 ps -o pid,cmd
+[root@student L1]# ps -eo pid,cmd|head
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ top
+ iotop
+ htop
+ mpstat
+ iostat
+ vmstat
+
+
+ vmstat secs Ntimes
+
+ vmstat 2 5
+	| |__5times
+	|
+	every 2 secs delay
+ 
+
+
+ vmstat 2 
+	|__ every 2 secs delay .. 
+
+ press Ctrl+C 
+-----------------------------------------------------------------------------
+
+ Write a C program
+ - system("ps -f") 
+
+ |-> display command result and system() return value to monitor.
+				---------------------
+				  |->exit code.
+
+ #include "ab.h"
+ int main(){
+	int rc;
+	rc=system("ps -f");
+	printf("rc=%d\n",rc);
+        sleep(10);
+	return 0;
+ }
+ --------------------------------------------------------------------------
+ getpid()   - PID
+ getppid()  - PPID 
+ 
+
+ P1 - PID:101,PAddress:0x123 Pstate:R+ ->Wait
+ |					
+ |fork()
+ |
+ P2 - PID:102,PAddress:0x444 Pstate:R+
+
+
+ fork();
+ ....		....
+ ....		....
+ ....		....//child - PID
+				|
+ ---//parent ------<-------------
+ 
+ process statistics
+ --------------------
+ - getrusage() - retrieves process statistics from the kernel.
+
+ sys/resource.h
+
+ struct rusage usage;
+ 
+ getrusage(RUSAGE_SELF,&usage);
+			-----
+			
+ #include<sys/wait.h>
+ #include<unistd.h>
+ ------------------------
+wait() - parent to wait until child get terminate(exit)
+       - on success returns the process PID of the terminated child
+
+waitpid() - on success returns the process PID of the child whose state
+	    has changed
+
+	WEXITED 
+	WSTOPPED 
+	WCONTINUED
+	
+
+ ./pobj &
+ [] <PID>
+
+ kill -STOP <PID>  (or) kill -19 <PID>
+ 
+ kill -CONT <PID> # continued
+
+ kill -TERM <PID> (or) kill -15 <PID>
+ 
+ 
+
+ int main(int argc,char *argv[]){
+	int pid,status;
+	pid=fork();
+	if(pid == 0){
+		printf("Child PID:%d\n",getpid());
+		if(argc == 1)
+			pause(); 
+	}else{
+		do{
+
+		waitpid(pid,&status,WUNTRACED|WCONTINUED);
+		
+		if(WIFEXITED(status)){
+			printf("exited,status=%d\n",WEXITSTATUS(status));
+		}else if(WIFSIGNALED(status)){
+			printf("killed by signal %d\n",WTERMSIG(status));
+		}else if(WIFSTOPPED(status)){
+			printf("stopped by signal %d\n",WSTOPSIG(status));
+		}else if(WIFCONTINUED(status)){
+			printf("continued\n")
+		}while(!EIFEXITED(status) && !WIFSIGNALED(status));
+	
+	}
+		
+ }
+
+-------------------------------------------------------------------------
+ [root@student L1]# ./p13 &
+[1] 21026
+[root@student L1]# Child PID:21027
+
+[root@student L1]# kill -STOP 21027
+[root@student L1]# stopped by signal 19
+
+[root@student L1]# kill -CONT 21027
+[root@student L1]# continued
+
+[root@student L1]# ps -l|grep 21027
+1 S     0 21027 21026  0  80   0 -  1056 sys_pa pts/1    00:00:00 p13
+[root@student L1]#
+[root@student L1]# kill -STOP 21027
+[root@student L1]# stopped by signal 19
+
+[root@student L1]# ps -l|grep 21027
+1 T     0 21027 21026  0  80   0 -  1056 do_sig pts/1    00:00:00 p13
+[root@student L1]# kill -CONT 21027
+[root@student L1]# continued
+
+[root@student L1]# kill -15 21027
+[root@student L1]# killed by signal 15
+
+-----------------------------------------------------------------------------------------
+ execl() - replace the current process (or) the current process code gets replced
+	   by a new process code. 
+
+ execl(path,command,NULL)
+
+ recap find command
+ -----------------
+ find / -name "*.c"|xargs ls -l 
+
+	Vs
+ find / -name "*.c" -exec ls -l {} \;
+
+
+   P1 - PID:101 - PAddress:0X1234
+   |
+   P2 - PID:102 - PAddress:0x3455<== 
+ 
+   P1 - PID:101 - PAddress:0X1234 - copy the P2(code) in Parent Address
+   |					     --------//execute the code in Parent Address space.
+   P2 - PID:102 - PAddress:________ 
+
+-------------------------------------------------------------------------------------------------------------------
+  P1 - Wait  <--
+  |		|
+  P2 - R+ -->Exit
+  
+
+  P1 - Wait <== killed by signal /interrupt 
+  |	
+  |
+  P2 - R+ ...... <== PPID:1
+  ---
+   |->Orphan process
+
+
+   PID	PPID
+   102	101
+   ..
+   ..
+   102	1   <== 102 is an orphan process
+
+  ---------------------------
+  if(fork() == 0){
+	while(1){
+		sleep(1);
+	}
+  }else{
+	exit(1);
+  }
+  ------------------------
+
+  P1 - Wait 
+  | 
+  P2 - R+.........Exit //blocked 
+
+  Zombie state 
+
+  A Zombie process is a process that has terminated but has not been cleaned up.
+
+int main(){
+        if(fork() == 0){
+                printf("Child-PID:%d\n",getpid());
+                exit(0);
+        }else{
+                printf("Parent-PID:%d\n",getpid());
+                sleep(60);
+        }
+        return 0;
+
+ ----------------------------------------------------------------------------------------
