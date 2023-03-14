@@ -1,0 +1,388 @@
+Recap
+--------
+	process
+	--------
+	|->1.user process   TTY:pts/port
+	|
+	|->2.system process TTY:?
+
+
+  myfile.service 
+  ---------------// ExecStart=file<==Executable file
+
+ fork()
+ wait()
+ waitpid()
+ execl()
+ orphan/zombie
+ 
+ fork() 
+ ------
+  |-> 2 pow n
+
+
+ fork();
+ printf("Hello");		Hello 
+				Hello
+ ---------------------
+ fork();
+ fork();
+ print("Hello");		Hello
+				Hello
+				Hello
+				Hello
+ -----------------------------------------------------------------------------
+ FileSystem
+ -----------
+ |
+ proc - filesystem - Virtual FileSystem 
+		   - not a storage filesystem
+		   - size is 0 (Zero)
+	
+ /proc - user directory
+ ------
+
+
+ /proc		/	/mnt <== user - mount point directory
+  |		|	 |
+ -------------------------------
+ proc		xfs	 nfs  ... <==FileSystem
+ |		|	 |
+ CPU,RAM	HD	network(NIC)
+ 
+-------------------------------------------------------------------------------
+ task_struct
+
+ proc
+  - directory
+	|->file
+	   ...//change kernel parameters
+
+ |
+ proc - structure 
+	|
+	sv.<Attr>
+ 
+ cat /proc/filename
+ ...
+ ...
+less  - page by page
+more  - line by line
+ 
+cat /proc/filesystems - supported filesystem
+ 
+ 
+cat /proc/cpuinfo  - information about the CPU
+
+cat /proc/meminfo - information about memory(RAM,swapspace and more)
+
+cat /proc/mounts - list of mounted filesystem
+ 
+cat /proc/devices - list of available devices
+ 
+cat /proc/modules - list of loaded kernel modules
+
+...
+
+  /etc/file 
+	|___ we can update a file
+		    ......
+			|
+			reboot is required
+
+ /proc/file
+	|____we can update this file
+		    ------
+			|--->reboot is not required.
+
+
+ readlink()  Vs read()
+ ----------
+ |
+ |__ readlink("linkfile","target",size of(target))//
+     --------		
+ |__ sscanf() 
+
+----------------------------------------------------------------------
+fdisk -l   (or) cat /proc/partitions
+
+cat /proc/mounts 
+
+uname -r  --> cat /proc/version 
+
+
+To change kernel parameters
+ -----------------------
+ 1) redirection way >
+		(or)
+ 2) sysctl -w <KernelParams>=Value
+	      ----------------------
+ ----------------------------------------//Runtime changes 
+
+ sysctl -a <= all the existing kernel parameters
+ ------------ 
+
+ Process Descriptor
+ -------------------
+ => The kernel stores the list of process in a circular doubly link list //task list
+	
+ => each element in the task list is a process descriptor
+   
+    struct task_struct
+	   -----------
+		|-><linux/sched.h>
+
+ => struct task_struct{
+		unsinged long state;
+		...
+		struct task_struct *parent;
+		...
+		...
+    };
+
+ /proc/sys/kernel/pid_max
+
+  2 pow 32/64 
+ 
+ set_tasks_state(taks,state) 
+
+ task ->state=state;
+
+ 
+ struct task_struct *p;
+ struct list_head *l;
+
+
+ struct task_struct{
+	long state;
+	long flagsl
+	...
+	long nice;
+	struct mm_struct *mm;
+	...
+	...
+	...
+ };
+ ----------------------------------//
+ 
+ signal(SIGNAME,Handler);
+		^^^^^^^
+		|
+		|
+	   int Handler(int signo){
+		//Action
+	   }
+ ---------------------------------------
+ SIG_IGN
+ --------//ignore signal
+
+  signal(SIGNAME,SIG_IGN);
+	 ^^^^^^^
+	 ^^^^^^^
+	 ^^^^^^^
+  ...
+  h=signal(SIGNAME,SIG_IGN)
+
+  signal(SIGNAME,h); //restore-old handler
+   
+
+
+ Trap all the signals ->passed to handler //
+ -----------------------------------------
+ main(){
+	
+	int i;
+	for(i=1;i<=64;i++){
+		signal(1,fx);
+	}
+	while(1){sleep(1);}
+	return 0; 
+
+ }
+
+ void fx(int signo){
+	signal(signo,fx);
+	printf("Recevied Signal=%d\n",signo);
+ }
+------------------------------------------------------------------------------
+ kill -9 <PID>
+ ---------===----
+  |
+ kill(<PID>,9)
+	    |
+	  singal(SIGKILL,Handler)
+			  |
+			int Handler(int signo){
+					(9)
+				//kill action is taken here - 
+				delete task_struct variable (about<PID>)
+						   ........	   
+			}
+	  
+	Vs
+ kill -15 <PID>
+ ---------===----
+  |
+ kill(<PID>,15)
+	    |
+	  singal(SIGTERM,Handler)
+			  |
+			int Handler(int signo){
+					(15c)
+				//kill action is taken here
+				won't delete PD //PCB - record
+			}
+	  
+--------------------------------------------------------------------------
+ Process 
+  - P1 - PID:101,PAddress:0x1234,Pstate:R+ .... //task_struct 
+     |			  ------
+     |			
+  - P2 - PID:102,PAddress:0x3445,Pstate:R+ .... //taks_struct
+ 			  ------
+
+ P1 <---->P2
+  ...........
+  ...........
+
+ IPC
+ ----
+	unnamed pipe |  ->pipe()
+	|
+	named pipe  (or) fifo => file - pipe 
+	
+	system V IPC
+	- message queue
+	- shared memory
+	- semaphore 
+	|
+	|->struct - attrs
+		    .......
+	
+
+ unnamed pipe - unidirectional communications link
+ pipe()
+ 
+	P1 | P2
+
+
+ cat /etc/passwd | grep bash
+ --------------- - ---------
+	P1	    P2
+		 |
+		 |
+		pipe()
+		- read the data from P1(process-P1) - read()
+		- write the data to P2(process-P2)  - write() 
+
+ pipe(int fd[2]);
+
+ fd[0] - read 
+ fd[1] - write
+
+ if a process reads from a pipe - write end has been closed 
+ if a process reads closed - write will be open
+
+ SIGPIPE 
+
+ signal(SIGPIPE,Handler)...
+
+ P1 | P2 
+  - fork()
+  - read()
+  - write()
+ #define  READ 0
+ #define  WRITE 1
+ char *d="test message";
+ int main(){
+	int fd[2];
+	char msg[15];	
+	int n;
+	pipe(fd);
+	if(fork() == 0){
+		close(fd[READ]);
+		write(fd[WRITE],d,15); //send
+		close(fd[WRITE]);
+	}else{
+		close(fd[WRITE]);
+		n=read(fd[READ],msg,15); //receive
+		printf("No of bytes received-%d\n",n);
+		close(fd[READ]);		
+	}	
+	return 0;
+ }
+---------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+  
