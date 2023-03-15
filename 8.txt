@@ -1,0 +1,238 @@
+
+
+#include<stdio.h>
+int main(){
+	main();
+ 	return 0;
+}
+------------------------------
+	gcc -o p1 p1.c
+	
+	|->debug this code	gdb p1
+	|->			run (or) r
+
+	|->Determine the signal name 
+------------------------------------------------
+ sigaction
+ |
+ unnamed pipe
+ named pipe
+ |
+ system V IPC
+  ... message queue
+  ... shared memory
+  ... semaphore 
+ |
+ socket programming
+-------------------------------------------------------------------------------
+ signal - asynchronous event
+
+ SIGKILL,SIGSTOP //
+
+ signal(SIGNAME,Handler);
+		|
+		int Handler(int sigNo){
+			//
+		}
+
+ sigaction
+ -----------
+
+ sigaction(SIGNAME,&newhandler,&oldhandler);
+                    |
+ struct sigaction   |
+ ----------------   |
+		 -----------
+		|sa_handler|
+		|----------|
+		|sa_mask   |
+		|----------|
+		|sa_flags  |
+		|----------|
+
+ SA_RESTART - sa_mask
+
+ signal sets
+ ------------
+ sigset_t  s | | | | | | 
+  	     -----------
+
+ empty set => sigemptyset() -> int sigemptyset(sigset_t *s) 
+
+ add a signal ->sigaddset() -> int sigaddset(sigset_t *s,int signo)	
+				| - | | | | 
+
+				| - |-| | | |
+
+ delete a signal ->sigdelset() ->int sigdelset(sigset_t *s,int signo);
+ ------
+ fill a signal set ->sigfillset() ->int sigfillset(sigset_t *s);
+  					
+					|-|-|-|-|-|-|
+
+ sigismember() //given singal is existing or not 
+				  |_1 	      |__ 0
+
+
+ void handler(int sigNo){
+	//	
+ }
+
+ main(){
+	struct sigaction action;
+	
+	action.sa_handler=handler;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags=SA_RESTART;
+	sigaction(SIGNAME,&action,NULL);
+	..
+ }
+
+ ---------------------------------------------------------------
+
+ void f1(int sigtype){
+	printf("Got signal %d\n",sigtype);
+ }
+
+ main(){
+
+	struct sigaction action;
+	
+	action.sa_handler=f1;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags=0;
+	sigaction(SIGINT,&action,NULL);
+	while(1){
+		sleep(1);
+	}
+	return 0;
+ }
+	
+--------------------------------------------------------------------------------
+
+ 1.unnamed pipe - |
+
+	P1 - read // write - closed
+		
+	P1 - write // read - closed 
+
+ P1 | P2
+    -----------//unnamed pipe
+
+
+ 2. named pipe - file 
+
+    P1 - read/write   <---> P2 - read/write 
+    --
+ 
+	mkfifo <filename>
+	------ ==========
+		|->pipe file
+
+	ls -l <filename>
+	p .....
+	|
+	|-->named pipe
+ 
+
+ mknod() -> mknod("chat",S_IFIFO,0); # create named pipe
+ |
+ chmod("chat",0666);
+
+ fd=open("chat",O_RDONLY);
+ 
+ ...
+ read(fd,str,...);
+
+ ...
+ }
+ 
+ msg="Hello test server" -------->read 
+  
+--------------------------------------------
+main(){
+
+	sprintf(msg,"Hello from PID%d",getpid());
+	do{
+		fd=open("chat",O_WRONLY);
+		if(fd == -1){ perror("msg"); }
+
+	}while(fd == -1);
+	
+	for(i=1;i<=3;i++){
+		write(fd,msg,20);
+		pipe(3);
+	}
+	close(fd);
+ }
+=====================================================
+	P1 			P2
+	- send ----------[  ]   --------receive
+			 ....
+			.....
+
+#include<sys/ipc.h>
+#include<sys/msg.h>
+-------------------------------------------------------------------------------
+ Sharedmemory
+ 
+
+ +-----------+
+ |   OS	     |
+ +-----------+
+ |   SHM     |<== shared memory - attach,deattach
+ +-----------+
+ |           |
+ |   RES     |	---------- swap
+ |	     |
+ +-----------+
+
+ #include<sys/ipc.h>
+	
+ #include<sys/shm.h>
+
+ 
+
+ 	[ ] [ ] [ ]
+	
+ C=3 # available
+
+ attached - counter will decremented   
+ 
+ P1 ->[p1] [ ] [ ]		
+
+c=3
+c--
+c=2
+	[p1][p2][]
+c--
+c=1	c=1 <== 1 resource is available 
+
+c--
+c=0	[p1][p2][p3]
+ ---	     |
+c=0	     |
+	     |___
+c++    increment 
+c=1
+c++
+c=2
+c++
+c=3
+		
+  socket() ->sd
+	      |
+	     bind
+	      | -<-------------------- |connect; request call|
+	 listen
+	      |
+	  accept
+	      ----------------------->
+	      ---------------<  -------------
+
+ sd=socket(domain,type,protocol);
+ --
+ SOCK_STREAM - TCP
+ SOCK_DGRAM - UDP
+ 
+-------------------------------------------------------------------------------------------------
