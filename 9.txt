@@ -1,0 +1,459 @@
+Recap
+------
+  |->Shell - interface btn user & kernel
+	   - user process parent is working shell
+	   - Login ->shell	....
+	     ------  ------- 
+		?	pts/<port>
+		
+	   - after successful login ->shell - read & execute  /etc/profile file
+					      --------------- ============
+
+Login as:root		Login as:student	Login as:anu
+password:		password:		password:
+	  	
+root@host~]#		student@host~]$ 	anu@host~]$
+
+
+/etc/profile
+-----------------
+export app="testApp"
+       ---
+f1(){
+	...
+	...
+	...
+}
+export -f f1
+
+
+Login as:root		Login as:student	Login as:anu
+password:		password:		password:
+	  	
+root@host~]#ls -a	student@host~]$ ls -a 	anu@host~]$ ls -a  
+ .bashrc		.bashrc			.bashrc
+ .bash_logout		.bash_logout		.bash_logout
+ .bash_history		.bash_history		.bash_history
+			|
+			student@host~]$ export db='oracle'
+			student@host~]$ echo $db ->oracle
+			student@host~]$ exit
+
+			Login as:student
+			password:
+			||
+			student@host~]$ echo $db ->empty
+			student@host~]$ vi .bashrc {enter}
+
+			export db="oracle"
+			export PYTHONPATH="/home/student/project/"
+			export JAVA_HOME=""
+			export -f f1
+			:wq
+			student@host~]$ 1. open new terminal
+					2. source a .bashrc file
+			
+			student@host~]$ echo $db ->empty
+			student@host~]$ bash{Enter} # new process is statrted
+			student@host~]$ echo $db ->oracle
+
+					Vs
+			
+			student@host~]$ echo $PYTHONPATH ->empty
+			student@host~]$ source .bashrc
+			student@host~]$ echo $PYTHONPATH ->/home/student/project/
+ 
+---------------------------------------------------------------------------------------------------
+root -> useradd <username>
+		-----------
+	|
+	cat /etc/passwd|grep <username>
+	|
+	passwd <username>
+	...
+	...
+
+root@host~]# su - <username>
+<username>@host~]$ ps
+		   whoami
+		   id 
+		   ..
+		   vi .bashrc
+			
+ 		   export URL="https://www.example.com"
+		   :wq
+
+		  echo $URL
+		  ----------
+		  source .bashrc <==
+		  echo $URL
+-------------------------------------------------------------------------------------------------
+recap  while 
+       ------
+	while [ ]
+	do
+		..
+	done
+
+	for 
+	---
+	for variable in <list of items>
+	do
+		..
+	done
+ -----------------------------------------------
+ select
+ -------
+  - menudriven programming
+  - always active 
+  - PS3 prompt #? 
+  - like for loop style - collection style 
+   
+ Syntax:-
+ -------- 
+ select variable in <list of items>
+ do
+	code block
+ done
+
+ select variable in <list of menu item>
+ do
+	case $variable in
+	menu1)	menu1 operation ;;
+	menu2)  menu2 operation ;;
+	menu3)  menu3 operation ;;
+	..
+	Quit)	break ;;
+	*)	echo "Invalid choice"
+	esac
+ done
+-------------------------------------------------------------------------
+  write a script file 
+  - definition only - there is no function call
+    ---------------
+     - calculate of total memory
+		    used memory
+		    free memory
+		 ----------------// independent function definition
+
+  - source a external file to local script
+  |
+  - using select loop - create a menulist - display list memory details
+  |
+  - user choice - display memory 
+-------------------------------------------------------------------------------
+ command <arg> <arg>
+ 	 ----- -----
+ ^^^^^^^  .      .
+ |
+ [ $? -eq 0 ]
+	....
+	....
+ ----------------------------------------------------------------------------------
+ memory 
+ ------
+ file,process
+	|
+	file executable //instance - process
+
+       process - memory
+ 
+ 		
+ malloc(),free()	-----> systemcall ->brk(),mmap()
+ new,delete,unset	-----> systemcall ->brk(),mmap()
+ 
+ ------ 
+ //user level	
+
+
+	process memory allocation
+	-------------------------
+	Higher Address 2 pow 64 -1|  Stack    | Downward |
+				  |  	      |
+				  |-----------|
+				  |  Free Memory |
+				* |--------------|
+				  |  Heap        | Upward Growth
+				  |dynamic memory|
+				  | space	 |
+				  |--------------|
+				  | BSS(uninitialize)|
+				  |------------------|
+				  | Data Segment     |
+				  | (initialized)    |
+				  |------------------|
+				  |  Text Segment    |
+				  |  Binary image    |
+				  |__________________|
+			Low Address 0x0
+
+   *  Break Point	
+
+ brk  - used to change the space allocated for running/calling process
+		----------------
+		 |->based by setting the process value to address
+		 |----------------------------------------------------
+ mmap - establish mapping between process Address <-->Data
+ 
+ #include<sys/mman.h>
+
+ int main(){
+ 
+ int n=3;
+ int *p=mmap(NULL,n*sizeof(int),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,0,0);
+ 
+ for(int i=0;i<5;i++)
+	p[i]=i+100;
+ for(int i=0;i<5;i++)
+	printf("%d ",p[i]);
+ printf("\nEnd of the code\n");
+ return 0;
+ }
+---------------------------------------------------------------------------------------------------------------------------------
+   Process 
+   -------
+    -> PID,PAddress,PPID,... //PCB - tasks_struct 
+   
+   P1(PID:101) - parent process is waiting
+   |				   -------
+   P2(PID:102) //tasks_struct - newprocess  - child process is running
+
+   Data+Address  
+
+  Thread
+  ------
+   |-Data //LWP
+
+  T1 - R+....
+  |	
+  T2 - R+
+  
+   POSIX Threads in Linux
+   -------------
+	|->pthreads
+ 
+ pthread_
+ 
+ 1.thread creation 
+ 2.thread synchronization 
+
+---------------------------------------------------------------
+ root@host~]# echo $0 ->bash - running/working shell name (Running Process)(P1-101)
+
+ root@host~]# vi p1.c{Enter} - newprocess(P2-102)
+  #include<stdio.h>
+  #include<unistd.h>
+  ...
+  :wq
+ root@host~]# Now active process is shell (bash)
+
+ ---------------------------------------------------------
+ void f1(){
+	printf("f1 block");
+	sleep(5);
+	printf("exit from f1block");
+ }
+ void f2(){
+	printf("f2 block");
+	sleep(3);
+	printf("exit from f2 block");
+ }
+
+ int main(){
+	printf("Main block-1\n");
+	f1();
+	printf("Main block-2\n");
+	sleep(3);
+	f2();
+	printf("Main block-3\n");
+	sleep(2);
+	f1(); Calling f1 block again
+	sleep(1);
+	exit(0);
+ }
+ ----------------------------------------------------------
+ gcc -o p1 p1.c
+ ./p1 <== PID:1001
+	  ----------
+	   |   |   |
+	  t1  t2   t3
+	   <--><-->//0x1234
+
+
+ ps aux 
+    STAT
+    
+    S - single thread application
+
+    Sl - Multithread application
+
+  man ps
+  /STAT
+   ..
+ ------------------------------------------------------------
+ pthread.h
+ |
+ pthread_create
+	 join
+	 exit
+ 	 init
+	 ....
+	 ....
+	--------
+ gcc -o p1 p1.c -lpthread 
+ ./p1
+ ----
+  |-> ps aux|grep ./p1 
+	   Sl+ <== multithread application running on foreground
+
+
+ T1			T1
+ |			|
+ T2		-------------------------
+ |		|	|	|    ..  |
+ T3		T2	T3	T4	 Tn
+ |
+ T4
+ |
+ ..
+ |
+ Tn
+
+ Process = Data + Address
+	   ----
+	    |
+	  Thread(Code-flow of execution)
+	    +
+	  Context
+  Process				code,data,stack
+  -----------------			--------------
+  | Program context			|    STACK   |
+  |  Data			      SP+-------------+
+  |  Condition Code			|	     |
+  |  ProgramCounter(PC)			---------------
+  |  Stack Pointer(SP)			|  shared libs|
+  | Kernel Context:		    brk |-------------|
+  |  DS					|    heap     |
+  |  Descriptor Table			|-------------|
+  |  brk pointer	            PC 	| code/data   |
+  |					|-------------|
+  -----------------                     |_____________|
+
+
+
+  Thread -1 
+  --------
+   SP | stack |
+      ---------
+      -----------------
+      |Thread Context:|
+      |Data,CC,PC,SP  |
+      |---------------|
+
+ 
+  Thread -2
+  --------
+   SP | stack |
+      ---------
+      -----------------
+      |Thread Context:|
+      |Data,CC,PC,SP  |
+      |---------------|
+
+ 
+  Thread -3 
+  -------------
+   SP | stack |
+      ---------
+      -----------------
+      |Thread Context:|
+      |Data,CC,PC,SP  |
+      |---------------|
+ 
+		(T2)		(T3)
+	  	 |		|
+ (T1)-------| shared code           |--(T4)
+	    | data & kernel context |
+	    |-----------------------|
+			|
+		      (T5)
+ -------------------------------------------------------------------------- 
+
+ pthread_create
+ pthread_join
+ pthread_self
+ pthread_exit  Vs exit() - exit all threads 
+ |
+ pthread_mutex_init 
+	|_pthread_mutex_lock
+	|_pthread_mutex_unlock
+
+ |
+ pthread_cond_init
+	|_pthread_con_wait
+	|_pthread_con_signal
+---------------------------------------------------------------------------
+
+ t=1,..N(20)
+   ---------//active 
+
+    [ ] locked
+	...
+	unlock
+
+    [t1]-lock
+      |__unlock
+
+    [ ]
+ 
+ c=1
+     [t1]
+ c--
+ c=0  
+      [  ]
+	|__t1
+ c++  
+ c value is 1 -> [ ]
+
+ C=0,1
+   ----
+    |<== mutex
+ 
+
+ 
+ pthread_create(&tid,attrs,ThreadName,Args);
+
+
+t done = 0;
+ pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+ pthread_cond_t c = PTHREAD_COND_INITIALIZER;
+
+ void thr_exit() {
+ pthread_mutex_lock(&m);	<== lock
+ done = 1;
+ pthread_cond_signal(&c); --------------->--------------------|
+ pthread_mutex_unlock(&m);	<== unlock		      |
+ }
+
+ void *child(void *arg) {
+ printf("child\n");
+ thr_exit();
+ return NULL;
+ }
+
+ void thr_join() {
+ pthread_mutex_lock(&m); <==Lock
+ while (done == 0)			CS
+ pthread_cond_wait(&c, &m);-------------<---------------------|--
+ pthread_mutex_unlock(&m); <== Unlock
+ }
+
+int main(int argc, char *argv[]) {
+ printf("parent: begin\n");
+ pthread_t p;
+ pthread_create(&p,NULL, child, NULL); <=== ....
+ thr_join();
+ printf("parent: end\n");
+ return 0;
+ }
+==========================================================================================
