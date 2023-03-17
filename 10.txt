@@ -1,0 +1,460 @@
+shared object(so) file
+
+filename.so
+-------------
+
+file:p1.c
+------------
+#include<stdio.h>
+#include "a.c"
+...	  ---
+...
+-------------
+ 
+file:a.c
+------------
+void f1(){}
+void f2(){}
+-------------
+
+gcc -shared -o p1.so p1.o   p2.o  a.o  b.o
+		     -----  ----  ---- ----
+ p1.so
+ ------ 
+
+gcc -L p1.so -o code p1.c -l <libfile>
+
+/etc/profile (or) bashrc
+
+export LD_LIBRARY_PATH=<path to .so file>:$LD_LIBRARY_PATH
+
+--------------------------------------------------
+ldd <absolute path>
+---
+ 
+p1.c			p2.c
+-----			---------
+void f1(){}		void f3(){}
+void f2(){}		-----------
+--------
+ gcc -c p1.c 		gcc -c p2.c
+ p1.o			p2.o
+ ====			====
+  |-----------------------|
+	   |
+      p1.o p2.o 
+
+  gcc -shared -o pobj.so p1.o p2.o
+		 -------
+		  |
+		load this .so file into external application(code)
+
+------------------------------------------------------------------------------------
+
+  [ Env ]
+
+  - toolX - .so
+  - toolY - .so
+  .............
+-----------------------------------------------------------------------------------------
+ Makefile
+ ---------
+   - building tool
+   
+ make - utility
+ 
+ Syntax about makefile command
+ ----------------------------
+ <targets>: <prerequisite>
+ <command>
+ <command>
+ ----------------------------
+
+ targets - targetfilename
+ |
+ prerequisite - file - 1 or more file//dependencies
+		      ---------------
+			separated by space
+ |
+ command 
+ -------------------------------------------------
+ Makefile
+ ...
+ ...
+ 
+ make
+
+
+p1:
+	echo "Test code"
+ ------------------------------------------------------
+
+ :=  
+
+files := filename
+
+file: p1.c
+target1: 
+	 gcc $(file) -o p1
+	 gcc $file -o p1
+	 gcc ${file} -o p1
+
+ ${variable} (or) $(variable) //
+
+ ----------------------------------------------------------
+
+ var1 = value # Recursive variable 
+		
+ var2 := value
+
+  
+ var1 =  value ${variable}
+ 
+ var2 := value ${variable}
+
+ variable = value
+ all:
+	echo $(var1)
+	echo $(var2)
+  -----------------------------------
+
+
+ var ?=  <== not be set any value
+ 
+ ---------------------------------------------
+ define - not a function 
+
+ define myblock
+ command
+ command
+ endef
+ all:
+	$myblock
+	$(myblock)
+ 
+----------------------------------------------------------
+ wildcards
+
+ * %
+ 
+ var := $(*.o)
+
+
+ myvar: $(var *.o)
+--------------------------------------------------------
+ files = f1 f2 f3
+ all: $(files)
+
+ $(files): %.o %.c
+
+ %.c:
+	touch $@ <== commandline args   f1.c f2.c f3.c 
+
+--------------------------------------------------------
+ @ - to stop a command from being display to monitor.
+
+ all:
+ 	@echo "Test"
+ 	 echo "message"
+ ---------------------
+
+ Test 
+ echo "message" <==
+ message<==
+ -----------------------------------------------------------------
+ hello: p1.c p2.c p3.c
+  	$(CC) -o $@
+ ----------------------------------
+
+ hello: p1.o p2.o p3.o
+	gcc $@ -o p123   (or)  gcc p1.o p2.o p3.o -o p123
+
+
+
+ p123: p1.o p2.o p3.o
+       gcc -o p123 p1.o p2.o p3.o
+
+ p3.o: p3.c ab.h
+       gcc -c p3.c
+
+ p2.o: p2.c ab.h
+       gcc -c p2.c 
+
+ p1.o: p1.c ab.h
+
+       gcc -c p1.c 
+-----------------------------------------------------------------------------
+ In shell commandline
+ ---------------------
+ |->variable=value
+	|
+	${variable} (or) $variable //OK
+
+ |->variable=`command` (or) variable=$(command)
+	|			|    ----------
+	|------${variable} (or) $variable
+
+
+ in makefile
+ --------------
+ ${variable}
+ $(variable)
+ $variable
+------------------------------------------------------------------------------------
+
+ 
+
+
+
+	----------------------------------------------
+		systemcall
+		|
+		FileSystem<--->PCB|IPC;SCHED;net;MM|
+		|
+		Device Drivers <==
+		|
+		Device Controllers
+		|
+	-----------------------------------------------
+ 
+ kernel module -> object file (ELF) 
+		  ------------------
+			|->filename.ko <== kernel object 2.6updated 
+ 
+ load the kernel module 
+ unload the kernel module
+  
+ DLKM -> dynamically loadable kernel module //without the need to reboot
+					      the system.
+
+ ex:
+ ---
+ device driver code
+
+
+	VLC: play - Running
+	---|-----
+	  systemcall
+	   |
+	  Filesystem
+	   |
+	  DD - <file.ko> 
+	   |   ...............//not present - device(H/w) won't work	
+	  DC	
+	--------
+	  |-- speaker(H/W) 
+
+ insmod ./file.ko  
+	----------
+	   |<== Relative path
+
+ insmod /home/userA/project/file.ko
+	----------------------------
+		|<== absolute path
+
+ lsmod
+
+ lsmod|grep file(module)
+
+ lsmod|grep bluetooth
+
+ lsmod|grep fat
+
+ lsmod|grep nfs
+
+ lsmod   --  cat /proc/modules
+ 
+ rmmod <modulename>
+ 
+ lsmod {enter}
+
+ <ModuleName>  <ModuleSize>  <No.of Process used>  <depends module>
+ 									
+ modinfo <moduleName> - To get kernel moduleinfo
+
+ /lib/modules/4.1.12-94.3.9.el7uek.x86_64/kernel/drivers/gpu/drm/drm.ko
+  
+ modinfo -n drm
+
+ /lib/modules/4.1.12-94.3.9.el7uek.x86_64/kernel/drivers/gpu/drm/drm.ko
+ 	      --------------------------- 	
+ 		
+ grub2 - bootloader - shellscript
+ 
+ |->/boot/grub2/gurb.cfg	
+ 
+ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ 
+ lsmod
+ lsmod|grep <module>
+		|__nfs xfs vfat bluetooth
+
+ modinfo <module>
+
+ modinfo -n <module>
+ ---------------------
+	|
+  ls /lib/ ... 
+
+ cat /boot/grub2/grub.cfg |less
+
+  insmod <module>
+
+ modprobe <module>
+ modprobe -r <module>
+
+
+[root@student D6]# modprobe bluetooth
+[root@student D6]# lsmod|grep bluetooth
+bluetooth             520192  0
+rfkill                 28672  1 bluetooth
+[root@student D6]# modprobe -r bluetooth
+[root@student D6]# lsmod|grep bluetooth
+[root@student D6]#
+[root@student D6]# modprobe -v bluetooth
+insmod /lib/modules/4.1.12-94.3.9.el7uek.x86_64/kernel/net/rfkill/rfkill.ko
+insmod /lib/modules/4.1.12-94.3.9.el7uek.x86_64/kernel/net/bluetooth/bluetooth.ko
+[root@student D6]# modprobe --show-depends bluetooth
+insmod /lib/modules/4.1.12-94.3.9.el7uek.x86_64/kernel/net/rfkill/rfkill.ko
+insmod /lib/modules/4.1.12-94.3.9.el7uek.x86_64/kernel/net/bluetooth/bluetooth.ko
+[root@student D6]#
+ modprobe -rv bluetooth
+rmmod bluetooth
+rmmod rfkill
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ 
+ initialize - load
+
+ clenup/exit - unload 
+
+  file: p1.c
+  -------------------------------------------------------------------
+  #include<linux/module.h>
+  #include<linux/kernel.h>
+  #include<linux/init.h> 
+
+  MODULE_DESCRIPTION("This is test module-3.0 version");
+
+  static int __init f1_init(void){	
+	printk(KERN_INFO "initialization - welcome\n");
+	return 0;
+  }
+
+  static void __exit f1_cleanup(void){
+	printk(KERN_INFO "unload the module - thank you\n");
+
+  }
+  module_init(f1_init);
+  module_exit(f1_cleanup);  
+ --------------------------------------------------------------------
+  vi Makefile 
+  
+ obj-m += p1.o 
+
+ all:
+	make -C /lib/modules/$(uname -r)/build M=$(PWD) modules
+	
+ clean:
+	make -C /lib/modules/$(uname -r)/build M=$(PWD) clean
+
+
+ --------------------------------------------------------------------
+
+ Device Driver program
+ -----------------------
+ 
+ 1. User space - application
+ 2. Kernel space - Driver
+
+ 1.open driver
+ 2.read driver
+ 3.write driver
+ 4.close driver
+  
+ kmalloc()	- *kmalloc(size,flags);
+ kfree()	- free(*obj);		
+ copy_from_user() - (kernel_,user_,*from,size);
+ copy_to_user()	  - (_user,*from,n);		
+
+ 
+ <linux/kdev_t.h>
+ <linux/fs.h>
+ <linux/device.h>
+ <linux/uaccess.h>
+ <linux/slab.h>
+ <linux/err.h>
+ 
+ // File Operations - structure 
+
+ // open a device file 
+
+ // read the device file 
+ 
+ // write the device file
+ 
+ // close a device file 
+
+ // Module initialization 
+
+ // Module removal/exit  
+ 
+ -- module initialization
+    ========================  
+  -  //Allocate Major Number
+
+ alloc_chrdev_region(&dev,0,1,"etx_dev") 
+		
+  - //creating cdev structure 
+ 
+  cdev_init(&etx_cdev,&fops); //struct file operation
+  
+  - //adding character device to the system
+
+  cdev_add(&etx_cdev,dev,1);
+
+  - //struct class
+
+  class_create(...)
+  -------------
+  device_create()
+
+  - create physical memory
+   
+    kernel_buffer=kmalloc(mem_size,....) 
+	
+   
+  // exit function
+
+  kfree(kernel_buffer);
+  device_destroy(dev_class,dev);
+  cdev_del(&etx_cdev); 
+  unregister_chrdev_region(dev,1);
+  ...
+
+ ------------------------------------------------------------------------
+
+ 
+ module_init();
+ module_exit();
+  ------------------------------------------------------------------------------ 	
+	
+  SELinux - MAC (Mandatory Access Control)
+
+ enforcing - deny - Access is denied to users and program
+ 
+ permissive  - The security policy rules are not enforced. //log will update(denial)
+ 
+ disabled  - SELinux does not enforce a security policy
+		    -----------------------------------
+			|->no policy is loaded in the kernel.
+
+ 
+ sestatus # display selinux 
+
+ getenforce - display selinux mode
+ 
+ Enforcing (or) Permissive (or) Disabled 
+
+ setenforce 0  (Permissive-0; enforcing-1) 
+----------------------------------------------------------------------------------------
